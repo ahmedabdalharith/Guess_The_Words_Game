@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1045543898112",
+    "project_id": "pyramid-questions",
+    "storage_bucket": "pyramid-questions.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1045543898112:android:e9ec4701785569c213dce5",
+        "android_client_info": {
+          "package_name": "com.example.guessthewordsgame"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCeY6qZ-6hVNZaGm5yTTbSH8gyBYJ2vqSE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

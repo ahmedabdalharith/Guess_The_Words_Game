@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Name -->
+    <string name="app_name">هرم الاسئلة</string>
+    <string name="app_version_info"> v1.0.0</string>
+
+    <!-- Home Screen -->
+    <string name="level_text">مستوى %1$d</string>
+    <string name="special_level_title">مستوى الهدية</string>
+    <string name="special_level_subtitle">أعلام الدول #١</string>
+    <string name="special_level_countries">أعلام الدول #١</string>
+    <string name="special_level_music">كلمات موسيقية</string>
+    <string name="special_level_food">تحدي المأكولات</string>
+    <string name="special_level_food_subtitle">مستوى ممتع ومميز</string>
+    <string name="special_level_premium">مستوى مميز</string>
+    <string name="special_level_premium_subtitle">تحدي الكلمات المميزة</string>
+
+    <!-- Game Mode Tabs -->
+    <string name="normal_mode">المستوى\nالعادي</string>
+    <string name="premium_mode">المستوى\nالمميز</string>
+    <string name="daily_challenge">التحدي\nاليومي</string>
+
+    <!-- Daily Challenges -->
+    <string name="today_challenge">تحدي اليوم</string>
+    <string name="yesterday_challenge">تحدي الأمس</string>
+    <string name="tomorrow_challenge">تحدي الغد</string>
+    <string name="date_may_14">14 مايو 2025</string>
+    <string name="date_may_13">13 مايو 2025</string>
+    <string name="date_may_15">15 مايو 2025</string>
+
+    <!-- Level Requirements -->
+    <string name="stars_required">%1$d نجوم مطلوبة</string>
+    <string name="coins_required">%1$d عملة مطلوبة</string>
+    <string name="level_range">المستوى من ١ إلى ٢</string>
+    <string name="vip_text">VIP</string>
+    <string name="or_text">أو</string>
+
+    <!-- Dialog Titles -->
+    <string name="unlock_level_title">فتح مستوى</string>
+    <string name="unlock_level_subtitle">لفتح هذا المستوى</string>
+    <string name="settings_title">الإعدادات</string>
+    <string name="daily_reward_title">مكافأة يومية</string>
+    <string name="username_dialog_title">اسم المستخدم</string>
+    <string name="which_adv_dialog_title">اختر نوع الإعلان</string>
+
+    <!-- Progress -->
+    <string name="progress_format">%1$d/%2$d</string>
+    <string name="progress_6_18">6/18</string>
+    <string name="progress_0_15">0/15</string>
+    <string name="progress_2_10">2/10</string>
+    <string name="progress_8_10">8/10</string>
+
+    <!-- Categories -->
+    <string name="category_countries">البلدان</string>
+    <string name="category_animals">الحيوانات</string>
+    <string name="category_tech">التكنولوجيا</string>
+    <string name="category_music">الموسيقى</string>
+    <string name="category_food">الطعام</string>
+    <string name="category_sports">الرياضة</string>
+
+    <!-- Buttons -->
+    <string name="close">إغلاق</string>
+    <string name="unlock">فتح</string>
+    <string name="start_game">بدء اللعبة</string>
+    <string name="open_store">فتح المتجر</string>
+    <string name="yes">نعم</string>
+    <string name="no">لا</string>
+
+    <!-- General -->
+    <string name="locked">مغلق</string>
+    <string name="unlocked">مفتوح</string>
+    <string name="gift">هدية</string>
+    <string name="new_words">كلمات جديدة</string>
+    <string name="plus_words">+%1$d</string>
+
+    <!-- Player Stats -->
+    <string name="stars">نجوم</string>
+    <string name="coins">عملات</string>
+    <string name="level">مستوى</string>
+    <string name="xp">خبرة</string>
+    <string name="streak">سلسلة</string>
+
+    <!-- Navigation -->
+    <string name="players">اللاعبون</string>
+    <string name="home">الرئيسية</string>
+    <string name="profile">الملف الشخصي</string>
+
+    <!-- Ads -->
+    <string name="watch_ad">مشاهدة إعلان</string>
+    <string name="reward_earned">تم الحصول على مكافأة!</string>
+    <string name="coins_earned">حصلت على %1$d عملة!</string>
+    <!-- Settings Dialog -->
+    <string name="settings">إعدادات</string>
+    <string name="select_language">اختر اللغة</string>
+    <string name="statistics">إحصائيات</string>
+    <string name="reset_game">أعد إعداد اللعبة</string>
+    <string name="rate_us">قيّمنا</string>
+    <string name="contact_us">تواصل معنا</string>
+    <string name="privacy_policy">سياسة الخصوصية</string>
+    <string name="terms_of_use">شروط الاستخدام</string>
+
+    <!-- Audio Controls -->
+    <string name="music_on">تشغيل الموسيقى</string>
+    <string name="music_off">إيقاف الموسيقى</string>
+    <string name="sound_on">تشغيل الصوت</string>
+    <string name="sound_off">إيقاف الصوت</string>
+    <string name="vibration_on">تشغيل الاهتزاز</string>
+    <string name="vibration_off">إيقاف الاهتزاز</string>
+
+    <!-- Dialog Actions -->
+    <string name="confirm">تأكيد</string>
+    <string name="cancel">إلغاء</string>
+    <string name="save">حفظ</string>
+    <string name="reset">إعادة تعيين</string>
+    <string name="continue_text">متابعة</string>
+    <string name="back">رجوع</string>
+    <string name="next">التالي</string>
+    <string name="skip">تخطي</string>
+    <string name="done">تم</string>
+    <string name="ok">موافق</string>
+
+    <!-- Game States -->
+    <string name="loading">جارٍ التحميل...</string>
+    <string name="game_over">انتهت اللعبة</string>
+    <string name="winner">فائز!</string>
+    <string name="loser">خاسر!</string>
+    <string name="try_again">حاول مرة أخرى</string>
+    <string name="well_done">أحسنت!</string>
+    <string name="excellent">ممتاز!</string>
+    <string name="perfect">مثالي!</string>
+
+    <!-- Notifications -->
+    <string name="hint_used">تم استخدام تلميح</string>
+    <string name="no_hints_left">لا توجد تلميحات متبقية</string>
+    <string name="purchase_hint">شراء تلميح</string>
+    <string name="insufficient_coins">عملات غير كافية</string>
+    <string name="reward_collected">تم جمع المكافأة</string>
+    <string name="daily_bonus">مكافأة يومية</string>
+
+    <!-- Game Instructions -->
+    <string name="how_to_play">كيفية اللعب</string>
+    <string name="game_rules">قواعد اللعبة</string>
+    <string name="tutorial">تعليمات</string>
+    <string name="help">مساعدة</string>
+
+    <!-- Profile & Stats -->
+    <string name="player_name">اسم اللاعب</string>
+    <string name="total_score">النتيجة الإجمالية</string>
+    <string name="best_score">أفضل نتيجة</string>
+    <string name="games_played">الألعاب المُلعبة</string>
+    <string name="win_rate">معدل الفوز</string>
+    <string name="achievements">الإنجازات</string>
+    <string name="leaderboard">لوحة المتصدرين</string>
+
+    <!-- Store & Shop -->
+    <string name="shop">المتجر</string>
+    <string name="buy">شراء</string>
+    <string name="purchase">شراء</string>
+    <string name="free">مجاني</string>
+    <string name="premium">مميز</string>
+    <string name="upgrade">ترقية</string>
+    <string name="remove_ads">إزالة الإعلانات</string>
+
+    <!-- Time & Date -->
+    <string name="today">اليوم</string>
+    <string name="yesterday">أمس</string>
+    <string name="tomorrow">غداً</string>
+    <string name="this_week">هذا الأسبوع</string>
+    <string name="last_week">الأسبوع الماضي</string>
+    <string name="time_remaining">الوقت المتبقي</string>
+
+    <!-- Error Messages -->
+    <string name="error_occurred">حدث خطأ</string>
+    <string name="network_error">خطأ في الشبكة</string>
+    <string name="try_again_later">حاول مرة أخرى لاحقاً</string>
+    <string name="connection_failed">فشل الاتصال</string>
+
+    <!-- Language Selection -->
+    <string name="arabic">عربي</string>
+    <string name="english">إنجليزي</string>
+    <string name="language_changed">تم تغيير اللغة</string>
+    <string name="restart_required">إعادة التشغيل مطلوبة</string>
+    <!-- Leaderboard Screen - Arabic -->
+    <string name="global_leaderboard">عالمي</string>
+    <string name="local_leaderboard">محلي</string>
+    <string name="weekly_filter">أسبوع</string>
+    <string name="monthly_filter">شهر</string>
+    <string name="all_time_filter">كل الوقت</string>
+
+    <!-- Player Names and Countries -->
+    <string name="player_yepy">YEPY</string>
+    <string name="player_tanja">TANJA</string>
+    <string name="player_heidi">HEIDI</string>
+    <string name="player_ksenia">KSENIA</string>
+    <string name="player_meda">MEDA</string>
+    <string name="player_yuliet">YULIET</string>
+    <string name="player_nikol">NIKOL</string>
+    <string name="player_daniel">DANIEL</string>
+    <string name="current_user_name">BLACK_honey901</string>
+
+    <!-- Country Names -->
+    <string name="country_venezuela">فنزويلا</string>
+    <string name="country_germany">ألمانيا</string>
+    <string name="country_liechtenstein">ليختنشتاين</string>
+    <string name="country_montenegro">الجبل الأسود</string>
+    <string name="country_spain">إسبانيا</string>
+    <string name="country_usa">الولايات المتحدة</string>
+    <string name="country_russia">روسيا</string>
+    <string name="country_serbia">صربيا</string>
+    <string name="country_egypt">مصر</string>
+
+    <!-- Score and Rank -->
+    <string name="rank_position">المرتبة %1$d</string>
+    <string name="current_rank">254</string>
+    <string name="stars_collected_description">عدد النجوم المجمعة</string>
+    <string name="flag_description">علم %1$s</string>
+
+    <!-- Content Descriptions -->
+    <string name="rank_number_description">رقم المرتبة</string>
+    <string name="player_score_description">نتيجة اللاعب</string>
+    <string name="country_flag_description">علم الدولة</string>
+
+    <!-- Wheel Screen Strings -->
+    <string name="spin_button">يلف</string>
+    <string name="watch_video">شاهد فيديو</string>
+    <string name="delete_two_letters">حذف \n حرفين</string>
+    <string name="hint">تلميح</string>
+    <string name="coin_single">🪙</string>
+    <string name="heart">❤️</string>
+
+    <!-- Prize Values -->
+    <string name="coin_1">1 🪙</string>
+    <string name="coin_15">15 🪙</string>
+    <string name="coin_20">20 🪙</string>
+    <string name="coin_25">25 🪙</string>
+    <string name="coin_50">50 🪙</string>
+    <string name="coin_100">100 🪙</string>
+
+    <!-- Content Descriptions -->
+    <string name="wheel_pointer_desc">مؤشر العجلة</string>
+    <string name="prize_desc">جائزة %1$s</string>
+    <string name="video_icon_desc">أيقونة الفيديو</string>
+
+    <!-- Game UI Texts -->
+    <string name="question_bar_text">تخمين البلاد؟</string>
+    <string name="points">نقطة</string>
+    <string name="retry">إعادة</string>
+
+    <!-- Control Button Labels -->
+    <string name="delete_letter">حذف</string>
+    <string name="clear_all">مسح</string>
+
+    <!-- Content Descriptions -->
+    <string name="coins_description">Coins</string>
+    <string name="country_hint_description">Country Hint</string>
+    <string name="japanese_background_description">Japanese Background Above Question</string>
+
+    <!-- Accessibility and Labels -->
+    <string name="check_icon_description">Check icon</string>
+    <string name="close_icon_description">Close icon</string>
+
+    <!-- Home Screen Strings -->
+    <string name="play_button">يلعب</string>
+    <string name="progress_indicator">0/3</string>
+
+    <!-- Progress and Level Strings -->
+    <string name="days_currency">أيام</string>
+    <string name="level_prefix">المستوى.</string>
+    <string name="xp_label">XP</string>
+    <string name="xp_progress_format">%1$s %2$d %3$d</string>
+    <string name="currency_format">%1$d %2$s</string>
+
+    <!-- Content Descriptions -->
+    <string name="logo_content_description">شعار</string>
+    <string name="globe_content_description">الكرة الأرضية</string>
+    <string name="spin_wheel_content_description">عجلة الدوران</string>
+    <string name="video_content_description">فيديو</string>
+    <string name="gift_content_description">هدية</string>
+    <!-- Daily Reward Dialog -->
+    <string name="daily_reward_collect_instruction">انقر في أي مكان للحصول على المكافأة</string>
+    <string name="daily_reward_day">يوم %1$d</string>
+    <string name="daily_reward_today">اليوم</string>
+
+    <!-- Reward amounts can be formatted -->
+    <string name="reward_amount">%1$d</string>
+
+    <!-- Statistics Dialog -->
+    <string name="statistics_title">إحصائيات</string>
+    <string name="statistics_total_questions">مجموع الأسئلة</string>
+    <string name="statistics_solved_recently">تم حلها</string>
+    <string name="statistics_not_solved_yet">لم يحل</string>
+    <string name="statistics_game_progress">تقدم اللعبة</string>
+    <string name="statistics_total_hints_used">إجمالي التلميحات المستخدمة</string>
+    <string name="statistics_failed_attempts">محاولات فاشلة</string>
+    <string name="statistics_membership_level">مستوى العضوية</string>
+    <string name="statistics_back_button">رجوع</string>
+    <string name="statistics_progress_percentage">%1$.1f%%</string>
+
+
+    <!-- Rating Dialog -->
+    <string name="rating_dialog_title">استمتعت؟</string>
+    <string name="rating_dialog_subtitle">هل ترغب في التقييم</string>
+    <string name="rating_dialog_game_name">لعبة Guess The Words</string>
+    <string name="rating_dialog_submit_button">تقييم</string>
+    <string name="rating_dialog_no_thanks">لا شكرا</string>
+    <string name="star_content_description">نجمة %1$d</string>
+    <string name="hand_pointing_content_description">يد تشير</string>
+
+
+    <!-- Watch Video Dialog -->
+    <string name="watch_video_title">شاهد فيديو</string>
+    <string name="watch_video_description">للحصول على مكافآت مذهلة! نقدية مجانية، استمر في المشاهدة 25 قطعة</string>
+    <string name="watch_button_text">يشاهد 🎬</string>
+
+    <!-- Content descriptions -->
+    <string name="video_icon_description">أيقونة الفيديو</string>
+    <string name="close_button_description">إغلاق</string>
+
+    <!-- Game Reset Dialog -->
+    <string name="dialog_reset_title">أعد إعداد اللعبة</string>
+    <string name="dialog_reset_message">هل أنت متأكد من أنك تريد إعادة ضبط اللعبة؟</string>
+    <string name="dialog_reset_cancel">لا شكراً</string>
+    <string name="dialog_reset_confirm">إعادة ضبط</string>
+
+    <!-- Game UI Texts -->
+    <string name="guess_country_question">تخمين البلاد؟</string>
+
+    <!-- Control Button Labels -->
+    <string name="delete_button">حذف</string>
+    <string name="clear_button">مسح</string>
+    <string name="delete_two_letters_button">حذف حرفين</string>
+    <string name="hint_button">تلميح</string>
+    <string name="skip_button">تخطي</string>
+
+    <!-- Content Descriptions -->
+    <string name="japanese_background_desc">خلفية يابانية فوق السؤال</string>
+
+    <!-- Game Messages -->
+    <string name="game_title">لعبة تخمين الكلمات</string>
+    <string name="lives_remaining">الأرواح المتبقية</string>
+    <string name="experience">الخبرة</string>
+
+    <!-- Lives Progress Indicator Strings -->
+    <string name="lives_full">ممتلئ</string>
+    <string name="lives_charging">جار الشحن</string>
+    <string name="lives_incomplete">غير مكتمل</string>
+
+    <!-- Time format for countdown -->
+    <string name="time_format">%1$02d:%2$02d</string>
+
+    <!-- Lives count format -->
+    <string name="lives_count_format">%1$d/%2$d</string>
+
+    <!-- Store Screen -->
+    <string name="vip_membership">عضوية VIP</string>
+    <string name="join">ينضم</string>
+    <string name="free_coins">عملات مجانية</string>
+    <string name="purchases">المشتريات</string>
+    <string name="share">مشاركة</string>
+    <string name="like">إعجاب</string>
+    <string name="follow">متابعة</string>
+    <string name="download_now">التحميل الآن!</string>
+    <string name="vip">VIP</string>
+    <string name="ads">ADS</string>
+    <string name="default_web_client_id" />
+</resources>

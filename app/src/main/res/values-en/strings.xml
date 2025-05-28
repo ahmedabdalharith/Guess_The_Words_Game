@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Name -->
+    <string name="app_name">Pyramid Questions</string>
+    <string name="app_version_info"> v1.0.0</string>
+
+    <!-- Home Screen -->
+    <string name="level_text">Level %1$d</string>
+    <string name="special_level_title">Gift Level</string>
+    <string name="special_level_subtitle">Country Flags #1</string>
+    <string name="special_level_countries">Country Flags #1</string>
+    <string name="special_level_music">Musical Words</string>
+    <string name="special_level_food">Food Challenge</string>
+    <string name="special_level_food_subtitle">Fun and Special Level</string>
+    <string name="special_level_premium">Premium Level</string>
+    <string name="special_level_premium_subtitle">Premium Words Challenge</string>
+
+    <!-- Game Mode Tabs -->
+    <string name="normal_mode">Normal\nLevel</string>
+    <string name="premium_mode">Premium\nLevel</string>
+    <string name="daily_challenge">Daily\nChallenge</string>
+
+    <!-- Daily Challenges -->
+    <string name="today_challenge">Today\'s Challenge</string>
+    <string name="yesterday_challenge">Yesterday\'s Challenge</string>
+    <string name="tomorrow_challenge">Tomorrow\'s Challenge</string>
+    <string name="date_may_14">May 14, 2025</string>
+    <string name="date_may_13">May 13, 2025</string>
+    <string name="date_may_15">May 15, 2025</string>
+
+    <!-- Level Requirements -->
+    <string name="stars_required">%1$d Stars Required</string>
+    <string name="coins_required">%1$d Coins Required</string>
+    <string name="level_range">Level 1 to 2</string>
+    <string name="vip_text">VIP</string>
+    <string name="or_text">Or</string>
+
+    <!-- Dialog Titles -->
+    <string name="unlock_level_title">Unlock Level</string>
+    <string name="unlock_level_subtitle">To unlock this level</string>
+    <string name="settings_title">Settings</string>
+    <string name="daily_reward_title">Daily Reward</string>
+    <string name="username_dialog_title">Username</string>
+    <string name="which_adv_dialog_title">Choose Ad Type</string>
+
+    <!-- Progress -->
+    <string name="progress_format">%1$d/%2$d</string>
+    <string name="progress_6_18">6/18</string>
+    <string name="progress_0_15">0/15</string>
+    <string name="progress_2_10">2/10</string>
+    <string name="progress_8_10">8/10</string>
+
+    <!-- Categories -->
+    <string name="category_countries">Countries</string>
+    <string name="category_animals">Animals</string>
+    <string name="category_tech">Technology</string>
+    <string name="category_music">Music</string>
+    <string name="category_food">Food</string>
+    <string name="category_sports">Sports</string>
+
+    <!-- Buttons -->
+    <string name="close">Close</string>
+    <string name="unlock">Unlock</string>
+    <string name="start_game">Start Game</string>
+    <string name="open_store">Open Store</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+
+    <!-- General -->
+    <string name="locked">Locked</string>
+    <string name="unlocked">Unlocked</string>
+    <string name="gift">Gift</string>
+    <string name="new_words">New Words</string>
+    <string name="plus_words">+%1$d</string>
+
+    <!-- Player Stats -->
+    <string name="stars">Stars</string>
+    <string name="coins">Coins</string>
+    <string name="level">Level</string>
+    <string name="xp">XP</string>
+    <string name="streak">Streak</string>
+
+    <!-- Navigation -->
+    <string name="players">Players</string>
+    <string name="home">Home</string>
+    <string name="profile">Profile</string>
+
+    <!-- Ads -->
+    <string name="watch_ad">Watch Ad</string>
+    <string name="reward_earned">Reward Earned!</string>
+    <string name="coins_earned">You earned %1$d coins!</string>
+    <!-- Settings Dialog -->
+    <string name="settings">Settings</string>
+    <string name="select_language">Select Language</string>
+    <string name="statistics">Statistics</string>
+    <string name="reset_game">Reset Game</string>
+    <string name="rate_us">Rate Us</string>
+    <string name="contact_us">Contact Us</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="terms_of_use">Terms of Use</string>
+
+    <!-- Audio Controls -->
+    <string name="music_on">Turn Music On</string>
+    <string name="music_off">Turn Music Off</string>
+    <string name="sound_on">Turn Sound On</string>
+    <string name="sound_off">Turn Sound Off</string>
+    <string name="vibration_on">Turn Vibration On</string>
+    <string name="vibration_off">Turn Vibration Off</string>
+
+    <!-- Dialog Actions -->
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="reset">Reset</string>
+    <string name="continue_text">Continue</string>
+    <string name="back">Back</string>
+    <string name="next">Next</string>
+    <string name="skip">Skip</string>
+    <string name="done">Done</string>
+    <string name="ok">OK</string>
+
+    <!-- Game States -->
+    <string name="loading">Loading...</string>
+    <string name="game_over">Game Over</string>
+    <string name="winner">Winner!</string>
+    <string name="loser">Loser!</string>
+    <string name="try_again">Try Again</string>
+    <string name="well_done">Well Done!</string>
+    <string name="excellent">Excellent!</string>
+    <string name="perfect">Perfect!</string>
+
+    <!-- Notifications -->
+    <string name="hint_used">Hint Used</string>
+    <string name="no_hints_left">No Hints Left</string>
+    <string name="purchase_hint">Purchase Hint</string>
+    <string name="insufficient_coins">Insufficient Coins</string>
+    <string name="reward_collected">Reward Collected</string>
+    <string name="daily_bonus">Daily Bonus</string>
+
+    <!-- Game Instructions -->
+    <string name="how_to_play">How to Play</string>
+    <string name="game_rules">Game Rules</string>
+    <string name="tutorial">Tutorial</string>
+    <string name="help">Help</string>
+
+    <!-- Profile & Stats -->
+    <string name="player_name">Player Name</string>
+    <string name="total_score">Total Score</string>
+    <string name="best_score">Best Score</string>
+    <string name="games_played">Games Played</string>
+    <string name="win_rate">Win Rate</string>
+    <string name="achievements">Achievements</string>
+    <string name="leaderboard">Leaderboard</string>
+
+    <!-- Store & Shop -->
+    <string name="shop">Shop</string>
+    <string name="buy">Buy</string>
+    <string name="purchase">Purchase</string>
+    <string name="free">Free</string>
+    <string name="premium">Premium</string>
+    <string name="upgrade">Upgrade</string>
+    <string name="remove_ads">Remove Ads</string>
+
+    <!-- Time & Date -->
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="tomorrow">Tomorrow</string>
+    <string name="this_week">This Week</string>
+    <string name="last_week">Last Week</string>
+    <string name="time_remaining">Time Remaining</string>
+
+    <!-- Error Messages -->
+    <string name="error_occurred">An Error Occurred</string>
+    <string name="network_error">Network Error</string>
+    <string name="try_again_later">Try Again Later</string>
+    <string name="connection_failed">Connection Failed</string>
+
+    <!-- Language Selection -->
+    <string name="arabic">Arabic</string>
+    <string name="english">English</string>
+    <string name="language_changed">Language Changed</string>
+    <string name="restart_required">Restart Required</string>
+    <!-- Leaderboard Screen - English -->
+    <string name="global_leaderboard">Global</string>
+    <string name="local_leaderboard">Local</string>
+    <string name="weekly_filter">Week</string>
+    <string name="monthly_filter">Month</string>
+    <string name="all_time_filter">All Time</string>
+
+    <!-- Player Names and Countries -->
+    <string name="player_yepy">YEPY</string>
+    <string name="player_tanja">TANJA</string>
+    <string name="player_heidi">HEIDI</string>
+    <string name="player_ksenia">KSENIA</string>
+    <string name="player_meda">MEDA</string>
+    <string name="player_yuliet">YULIET</string>
+    <string name="player_nikol">NIKOL</string>
+    <string name="player_daniel">DANIEL</string>
+    <string name="current_user_name">BLACK_honey901</string>
+
+    <!-- Country Names -->
+    <string name="country_venezuela">Venezuela</string>
+    <string name="country_germany">Germany</string>
+    <string name="country_liechtenstein">Liechtenstein</string>
+    <string name="country_montenegro">Montenegro</string>
+    <string name="country_spain">Spain</string>
+    <string name="country_usa">USA</string>
+    <string name="country_russia">Russia</string>
+    <string name="country_serbia">Serbia</string>
+    <string name="country_egypt">Egypt</string>
+
+    <!-- Score and Rank -->
+    <string name="rank_position">Rank %1$d</string>
+    <string name="current_rank">254</string>
+    <string name="stars_collected_description">Stars collected</string>
+    <string name="flag_description">Flag of %1$s</string>
+
+    <!-- Content Descriptions -->
+    <string name="rank_number_description">Rank number</string>
+    <string name="player_score_description">Player score</string>
+    <string name="country_flag_description">Country flag</string>
+
+    <!-- Wheel Screen Strings -->
+    <string name="spin_button">Spin</string>
+    <string name="watch_video">Watch</string>
+    <string name="delete_two_letters">Delete\nTwo\n Letters</string>
+    <string name="hint">Hint</string>
+    <string name="coin_single">🪙</string>
+    <string name="heart">❤️</string>
+
+    <!-- Prize Values -->
+    <string name="coin_1">1 🪙</string>
+    <string name="coin_15">15 🪙</string>
+    <string name="coin_20">20 🪙</string>
+    <string name="coin_25">25 🪙</string>
+    <string name="coin_50">50 🪙</string>
+    <string name="coin_100">100 🪙</string>
+
+    <!-- Content Descriptions -->
+    <string name="wheel_pointer_desc">Wheel Pointer</string>
+    <string name="prize_desc">Prize %1$s</string>
+    <string name="video_icon_desc">Video Icon</string>
+
+    <!-- Game UI Texts -->
+    <string name="question_bar_text">Guess the Country?</string>
+    <string name="points">Points</string>
+    <string name="retry">Retry</string>
+
+    <!-- Control Button Labels -->
+    <string name="delete_letter">Delete</string>
+    <string name="clear_all">Clear</string>
+
+    <!-- Content Descriptions -->
+    <string name="coins_description">Coins</string>
+    <string name="country_hint_description">Country Hint</string>
+    <string name="japanese_background_description">Japanese Background Above Question</string>
+
+    <!-- Accessibility and Labels -->
+    <string name="check_icon_description">Check icon</string>
+    <string name="close_icon_description">Close icon</string>
+
+    <!-- Home Screen Strings -->
+    <string name="play_button">Play</string>
+    <string name="progress_indicator">0/3</string>
+
+    <!-- Progress and Level Strings -->
+    <string name="days_currency">Days</string>
+    <string name="level_prefix">Lv.</string>
+    <string name="xp_label">XP</string>
+    <string name="xp_progress_format">%1$s %2$d %3$d</string>
+    <string name="currency_format">%1$d %2$s</string>
+
+    <!-- Content Descriptions -->
+    <string name="logo_content_description">Logo</string>
+    <string name="globe_content_description">Globe</string>
+    <string name="spin_wheel_content_description">Spin Wheel</string>
+    <string name="video_content_description">Video</string>
+    <string name="gift_content_description">Gift</string>
+
+    <!-- Daily Reward Dialog -->
+    <string name="daily_reward_collect_instruction">Tap anywhere to collect reward</string>
+    <string name="daily_reward_day">Day %1$d</string>
+    <string name="daily_reward_today">Today</string>
+
+    <!-- Reward amounts can be formatted -->
+    <string name="reward_amount">%1$d</string>
+
+    <!-- Statistics Dialog -->
+    <string name="statistics_title">Statistics</string>
+    <string name="statistics_total_questions">Total Questions</string>
+    <string name="statistics_solved_recently">Solved</string>
+    <string name="statistics_not_solved_yet">Not Solved</string>
+    <string name="statistics_game_progress">Game Progress</string>
+    <string name="statistics_total_hints_used">Total Hints Used</string>
+    <string name="statistics_failed_attempts">Failed Attempts</string>
+    <string name="statistics_membership_level">Membership Level</string>
+    <string name="statistics_back_button">Back</string>
+    <string name="statistics_progress_percentage">%1$.1f%%</string>
+
+
+    <!-- Rating Dialog -->
+    <string name="rating_dialog_title">Did you enjoy?</string>
+    <string name="rating_dialog_subtitle">Would you like to rate</string>
+    <string name="rating_dialog_game_name">Guess The Words game</string>
+    <string name="rating_dialog_submit_button">Rate</string>
+    <string name="rating_dialog_no_thanks">No thanks</string>
+    <string name="star_content_description">Star %1$d</string>
+    <string name="hand_pointing_content_description">Hand pointing</string>
+
+
+
+    <!-- Watch Video Dialog -->
+    <string name="watch_video_title">Watch Video</string>
+    <string name="watch_video_description">Get amazing rewards! Free coins, keep watching to earn 25 coins</string>
+    <string name="watch_button_text">Watch 🎬</string>
+
+    <!-- Content descriptions -->
+    <string name="video_icon_description">Video icon</string>
+    <string name="close_button_description">Close</string>
+
+    <!-- Game Reset Dialog -->
+    <string name="dialog_reset_title">Reset Game</string>
+    <string name="dialog_reset_message">Are you sure you want to reset the game?</string>
+    <string name="dialog_reset_cancel">No Thanks</string>
+    <string name="dialog_reset_confirm">Reset</string>
+
+
+    <!-- Game UI Texts -->
+    <string name="guess_country_question">Guess the Country?</string>
+
+    <!-- Control Button Labels -->
+    <string name="delete_button">Delete</string>
+    <string name="clear_button">Clear</string>
+    <string name="delete_two_letters_button">Delete Two</string>
+    <string name="hint_button">Hint</string>
+    <string name="skip_button">Skip</string>
+
+    <!-- Content Descriptions -->
+    <string name="japanese_background_desc">Japanese Background Above Question</string>
+
+    <!-- Game Messages -->
+    <string name="game_title">Word Guessing Game</string>
+    <string name="lives_remaining">Lives Remaining</string>
+
+    <string name="experience">Experience</string>
+
+    <!-- Lives Progress Indicator Strings -->
+    <string name="lives_full">Full</string>
+    <string name="lives_charging">Charging</string>
+    <string name="lives_incomplete">Incomplete</string>
+
+    <!-- Time format for countdown -->
+    <string name="time_format">%1$02d:%2$02d</string>
+
+    <!-- Lives count format -->
+    <string name="lives_count_format">%1$d/%2$d</string>
+
+
+    <!-- Store Screen -->
+    <string name="vip_membership">VIP Membership</string>
+    <string name="join">Join</string>
+    <string name="free_coins">Free Coins</string>
+    <string name="purchases">Purchases</string>
+    <string name="share">SHARE</string>
+    <string name="like">LIKE</string>
+    <string name="follow">FOLLOW</string>
+    <string name="download_now">Download Now!</string>
+    <string name="vip">VIP</string>
+    <string name="ads">ADS</string>
+    <string name="default_web_client_id" />
+</resources>

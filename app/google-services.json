@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "721639959382",
+    "project_id": "fir-ab40a",
+    "storage_bucket": "fir-ab40a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:721639959382:android:5a65016a4eeb2cda9644f7",
+        "android_client_info": {
+          "package_name": "com.example.firebase"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA7XGZIz2RUwP2I8mDbA4td3PQrTRtV6d8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:721639959382:android:4ca7c5129e75acc79644f7",
+        "android_client_info": {
+          "package_name": "com.example.guessthewordsgame"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA7XGZIz2RUwP2I8mDbA4td3PQrTRtV6d8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

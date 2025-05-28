@@ -1,0 +1,52 @@
+📁 app
+ ┗ 📁 src
+    ┗ 📁 main
+       ┣ 📁 java/com/yourdomain/triviagame
+       ┃  ┣ 📁 core
+       ┃  ┃  ┣ 📄 Constants.kt            ← ثوابت عامة
+       ┃  ┃  ┗ 📄 Utils.kt                ← دوال مساعدة (مثل التحقق، تنسيقات...إلخ)
+       ┃  ┣ 📁 di
+       ┃  ┃  ┗ 📄 AppModule.kt            ← إعدادات Hilt/Dependency Injection
+       ┃  ┣ 📁 navigation
+       ┃  ┃  ┣ 📄 Routes.kt               ← تعريف مسارات التنقل
+       ┃  ┃  ┗ 📄 AppNavGraph.kt          ← منطق التنقل الكامل
+       ┃  ┣ 📁 presentation
+       ┃  ┃  ┣ 📁 splash
+       ┃  ┃  ┃  ┣ 📄 SplashScreen.kt
+       ┃  ┃  ┣ 📁 home
+       ┃  ┃  ┃  ┣ 📄 HomeScreen.kt
+       ┃  ┃  ┃  ┣ 📄 HomeViewModel.kt
+       ┃  ┃  ┣ 📁 game
+       ┃  ┃  ┃  ┣ 📄 GameScreen.kt
+       ┃  ┃  ┃  ┣ 📄 GameViewModel.kt
+       ┃  ┃  ┣ 📁 result
+       ┃  ┃  ┃  ┣ 📄 ResultScreen.kt
+       ┃  ┃  ┃  ┣ 📄 ResultViewModel.kt
+       ┃  ┃  ┣ 📁 components
+       ┃  ┃  ┃  ┣ 📄 CustomButton.kt
+       ┃  ┃  ┃  ┣ 📄 GameCard.kt
+       ┃  ┃  ┃  ┗ 📄 ImageWithAnswer.kt
+       ┃  ┣ 📁 domain
+       ┃  ┃  ┣ 📁 model
+       ┃  ┃  ┃  ┗ 📄 Question.kt
+       ┃  ┃  ┣ 📁 usecase
+       ┃  ┃  ┃  ┗ 📄 GetQuestionUseCase.kt
+       ┃  ┣ 📁 data
+       ┃  ┃  ┣ 📁 repository
+       ┃  ┃  ┃  ┗ 📄 QuestionRepositoryImpl.kt
+       ┃  ┃  ┣ 📁 local
+       ┃  ┃  ┃  ┣ 📄 QuestionDataSource.kt
+       ┃  ┃  ┗ 📁 remote (اختياري إذا كانت الأسئلة من API)
+       ┃  ┃     ┣ 📄 ApiService.kt
+       ┃  ┃     ┣ 📄 NetworkModule.kt
+       ┃  ┣ 📄 MainActivity.kt
+       ┃  ┣ 📄 TriviaGameApp.kt           ← نقطة الدخول للتطبيق مع Theme
+       ┣ 📁 res
+       ┃  ┣ 📁 drawable
+       ┃  ┣ 📁 values
+       ┃  ┃  ┣ 📄 strings.xml
+       ┃  ┃  ┣ 📄 colors.xml
+       ┃  ┃  ┣ 📄 themes.xml
+       ┃  ┃  ┗ 📄 dimens.xml
+       ┃  ┗ 📄 themes/Theme.kt            ← Jetpack Compose Theme
+       ┗ 📄 AndroidManifest.xml
