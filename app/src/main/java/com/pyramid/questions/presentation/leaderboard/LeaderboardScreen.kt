@@ -1,6 +1,8 @@
 package com.pyramid.questions.presentation.leaderboard
 
 import android.content.res.Configuration
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -37,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -44,6 +47,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,8 +56,10 @@ import androidx.navigation.compose.rememberNavController
 import com.pyramid.questions.AppColors
 import com.pyramid.questions.R
 import com.pyramid.questions.data.local.GamePreferencesManager
+import com.pyramid.questions.navigation.Route
 import com.pyramid.questions.presentation.components.CustomButton
 import com.pyramid.questions.presentation.components.TopGameBar
+import com.pyramid.questions.presentation.components.UsernameGloableDialog
 import java.util.Locale
 
 @Composable
@@ -62,76 +68,99 @@ fun LeaderboardScreen(
 ) {
     val preferencesManager = remember { GamePreferencesManager(navController.context) }
     val currentLocale = remember { Locale(preferencesManager.getLanguage()) }
-    val arabicFont = FontFamily(Font(if (currentLocale == Locale("ar")) {
-        R.font.arbic_font_bold_2
-    } else {
-        R.font.en_font
-    }))
-    val playerStats =preferencesManager.getPlayerStats()
+    val arabicFont = FontFamily(
+        Font(
+            if (currentLocale == Locale("ar")) {
+                R.font.arbic_font_bold_2
+            } else {
+                R.font.eng3
+            }
+        )
+    )
+    val Player = preferencesManager.getPlayer()
     CompositionLocalProvider(
         LocalContext provides LocalContext.current.createConfigurationContext(
             Configuration().apply { setLocale(currentLocale) }
         )
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            AppColors.BackgroundStart,
-                            AppColors.BackgroundEnd
-                        )
-                    )
-                )
-        ) {
-            Column(
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                AppColors.BackgroundStart,
+                                AppColors.BackgroundEnd
+                            )
+                        )
+                    )
             ) {
-                TopGameBar(
-                    playerStats = playerStats,
-                    onOpenStore = { /* Handle open store */ },
-                    onOpenProfile = { /* Handle open profile */ },
-                    showDriver = true,
-                    onBackClicked = {
-                        navController.popBackStack()
-                    },
-                    fontFamily = FontFamily(Font(R.font.arbic_font_bold_2)),
-                )
                 Column(
                     modifier = Modifier
-                        .weight(1f)
-                        .padding(16.dp)
+                        .fillMaxSize()
                 ) {
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Tab selector
-                    LeaderboardTabs(arabicFont)
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Filter tabs
-                    LeaderboardFilterTabs(arabicFont)
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Leaderboard list
-                    LeaderboardList(
-                        players = samplePlayers(),
-                        currentUserRank = stringResource(R.string.current_rank).toInt(),
-                        currentUserName = stringResource(R.string.current_user_name),
-                        currentUserCountry = stringResource(R.string.country_egypt),
-                        currentUserScore = 0,
-                        arabicFont = arabicFont
+                    TopGameBar(
+                        player = Player,
+                        onOpenStore = {
+                            navController.navigate(Route.STORE)
+                        },
+                        onOpenProfile = { /* Handle open profile */ },
+                        showDriver = true,
+                        onBackClicked = {
+                            navController.navigate(Route.HOME) {
+                                popUpTo(Route.HOME) { inclusive = true }
+                            }
+                            Log.d(
+                                "LeaderboardScreen",
+                                "Back button clicked, navigating to previous screen"
+                            )
+                        },
+                        fontFamily = FontFamily(
+                            Font(
+                                if (currentLocale == Locale("ar")) {
+                                    R.font.arbic_font_bold_2
+                                } else {
+                                    R.font.eng3
+                                }
+                            )
+                        ),
                     )
-                }
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(16.dp)
+                    ) {
 
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Tab selector
+                        LeaderboardTabs(arabicFont)
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Filter tabs
+                        LeaderboardFilterTabs(arabicFont)
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Leaderboard list
+                        LeaderboardList(
+                            players = samplePlayers(),
+                            currentUserRank = stringResource(R.string.current_rank).toInt(),
+                            currentUserName = preferencesManager.getUsername().toString(),
+                            currentUserCountry = stringResource(R.string.country_egypt),
+                            currentUserScore = preferencesManager.getPlayer().stars,
+                            arabicFont = arabicFont
+                        )
+                    }
+                }
             }
         }
     }
 }
+
 @Composable
 fun LeaderboardList(
     players: List<PlayerRank>,
@@ -139,8 +168,11 @@ fun LeaderboardList(
     currentUserName: String,
     currentUserCountry: String,
     currentUserScore: Int,
-    arabicFont: FontFamily
+    arabicFont: FontFamily,
 ) {
+    var showDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    var messageSuccessfully = stringResource(R.string.name_changed_successfully)
     Box(modifier = Modifier.fillMaxWidth()) {
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
@@ -154,6 +186,19 @@ fun LeaderboardList(
                     isTopThree = player.rank <= 3
                 )
             }
+        }
+        if (showDialog) {
+            UsernameGloableDialog(
+                title = stringResource(R.string.change_name),
+                onClickYes = {
+                    showDialog = false
+                    Toast.makeText(
+                        context,
+                        messageSuccessfully,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                },
+            )
         }
 
         // Current user's rank (floating above the rest)
@@ -177,7 +222,10 @@ fun LeaderboardList(
                     .shadow(
                         elevation = 8.dp,
                         shape = RoundedCornerShape(12.dp)
-                    )
+                    ), onClick = {
+                    showDialog = true
+
+                }
             )
         }
     }
@@ -189,15 +237,18 @@ fun PlayerRankItem(
     fontFamily: FontFamily,
     isHighlighted: Boolean,
     isTopThree: Boolean = false,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
     val backgroundGradient = when {
         isHighlighted -> Brush.horizontalGradient(
             colors = listOf(Color(0xFFDCF8FF), Color(0xFF8ED6FF))
         )
+
         isTopThree -> Brush.horizontalGradient(
             colors = listOf(Color(0xFFFFF9C4), Color(0xFFFFEB3B))
         )
+
         else -> Brush.horizontalGradient(
             colors = listOf(Color(0xFF64A0FF), Color(0xFF3C82FF))
         )
@@ -222,7 +273,7 @@ fun PlayerRankItem(
     }
 
     CustomButton(
-        onClick = { },
+        onClick = onClick,
         backgroundColor = when {
             isHighlighted -> Color(0xFFD4E9FF)
             isTopThree -> Color(0xFFFFF59D)
@@ -396,6 +447,7 @@ fun StarWithScore(
         }
     }
 }
+
 @Composable
 fun LeaderboardTabs(fontFamily: FontFamily) {
     var selectedTab by remember { mutableStateOf("global") }
@@ -410,7 +462,9 @@ fun LeaderboardTabs(fontFamily: FontFamily) {
             isSelected = selectedTab == "global",
             onClick = { selectedTab = "global" },
             fontFamily = fontFamily,
-            modifier = Modifier.weight(1f).height(50.dp)
+            modifier = Modifier
+                .weight(1f)
+                .height(50.dp)
         )
 
         // Local tab
@@ -419,7 +473,9 @@ fun LeaderboardTabs(fontFamily: FontFamily) {
             isSelected = selectedTab == "local",
             onClick = { selectedTab = "local" },
             fontFamily = fontFamily,
-            modifier = Modifier.weight(1f).height(50.dp)
+            modifier = Modifier
+                .weight(1f)
+                .height(50.dp)
         )
     }
 }
@@ -471,7 +527,9 @@ fun LeaderboardFilterTabs(fontFamily: FontFamily) {
             isSelected = selectedFilter == "week",
             onClick = { selectedFilter = "week" },
             fontFamily = fontFamily,
-            modifier = Modifier.weight(1f).height(50.dp)
+            modifier = Modifier
+                .weight(1f)
+                .height(50.dp)
         )
 
         // Monthly filter
@@ -480,7 +538,9 @@ fun LeaderboardFilterTabs(fontFamily: FontFamily) {
             isSelected = selectedFilter == "month",
             onClick = { selectedFilter = "month" },
             fontFamily = fontFamily,
-            modifier = Modifier.weight(1f).height(50.dp)
+            modifier = Modifier
+                .weight(1f)
+                .height(50.dp)
         )
 
         // All-time filter
@@ -489,7 +549,9 @@ fun LeaderboardFilterTabs(fontFamily: FontFamily) {
             isSelected = selectedFilter == "all",
             onClick = { selectedFilter = "all" },
             fontFamily = fontFamily,
-            modifier = Modifier.weight(1f).height(50.dp)
+            modifier = Modifier
+                .weight(1f)
+                .height(50.dp)
         )
     }
 }
@@ -568,16 +630,66 @@ data class PlayerRank(
 @Composable
 fun samplePlayers(): List<PlayerRank> {
     return listOf(
-        PlayerRank(rank = 1, name = stringResource(R.string.player_yepy), score = 432, country = "venezuela"),
-        PlayerRank(rank = 2, name = stringResource(R.string.player_tanja), score = 387, country = "germany"),
-        PlayerRank(rank = 3, name = stringResource(R.string.player_heidi), score = 361, country = "usa"),
-        PlayerRank(rank = 4, name = stringResource(R.string.player_ksenia), score = 322, country = "russia"),
-        PlayerRank(rank = 5, name = stringResource(R.string.player_meda), score = 318, country = "serbia"),
-        PlayerRank(rank = 6, name = stringResource(R.string.player_yuliet), score = 290, country = "venezuela"),
-        PlayerRank(rank = 7, name = stringResource(R.string.player_nikol), score = 275, country = "liechtenstein"),
-        PlayerRank(rank = 8, name = stringResource(R.string.player_daniel), score = 260, country = "montenegro"),
-        PlayerRank(rank = 9, name = stringResource(R.string.player_daniel), score = 250, country = "spain"),
-        PlayerRank(rank = 10, name = stringResource(R.string.player_daniel), score = 240, country = "usa"),
+        PlayerRank(
+            rank = 1,
+            name = stringResource(R.string.player_yepy),
+            score = 432,
+            country = "venezuela"
+        ),
+        PlayerRank(
+            rank = 2,
+            name = stringResource(R.string.player_tanja),
+            score = 387,
+            country = "germany"
+        ),
+        PlayerRank(
+            rank = 3,
+            name = stringResource(R.string.player_heidi),
+            score = 361,
+            country = "usa"
+        ),
+        PlayerRank(
+            rank = 4,
+            name = stringResource(R.string.player_ksenia),
+            score = 322,
+            country = "russia"
+        ),
+        PlayerRank(
+            rank = 5,
+            name = stringResource(R.string.player_meda),
+            score = 318,
+            country = "serbia"
+        ),
+        PlayerRank(
+            rank = 6,
+            name = stringResource(R.string.player_yuliet),
+            score = 290,
+            country = "venezuela"
+        ),
+        PlayerRank(
+            rank = 7,
+            name = stringResource(R.string.player_nikol),
+            score = 275,
+            country = "liechtenstein"
+        ),
+        PlayerRank(
+            rank = 8,
+            name = stringResource(R.string.player_daniel),
+            score = 260,
+            country = "montenegro"
+        ),
+        PlayerRank(
+            rank = 9,
+            name = stringResource(R.string.player_daniel),
+            score = 250,
+            country = "spain"
+        ),
+        PlayerRank(
+            rank = 10,
+            name = stringResource(R.string.player_daniel),
+            score = 240,
+            country = "usa"
+        ),
     )
 }
 

@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.gms.google.services)
-
+    id ("kotlin-kapt")
 }
 
 android {
@@ -11,7 +11,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.guessthewordsgame"
+        applicationId = "com.pyramid.questions"
         minSdk = 28
         targetSdk = 35
         versionCode = 1
@@ -27,6 +27,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -55,6 +56,7 @@ dependencies {
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
+    implementation(libs.firebase.firestore)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -79,4 +81,14 @@ dependencies {
 
     implementation("com.google.android.gms:play-services-auth:20.6.0")
     implementation(platform("com.google.firebase:firebase-bom:33.14.0"))
+
+    kapt ("androidx.room:room-compiler:2.6.1")
+
+    implementation ("com.cloudinary:cloudinary-android:2.5.0")
+
+    // room database
+    implementation("androidx.room:room-runtime:2.6.0")
+    implementation("androidx.room:room-ktx:2.6.0")
+    implementation("androidx.room:room-paging:2.6.0")
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
 }

@@ -504,7 +504,7 @@ fun EnhancedFloatingElements(
                     .rotate(floatingOffset * rotationSpeed * 0.5f)
                     .size(40.dp),
                 fontSize = 18f,
-                fontFamily = FontFamily(Font(R.font.fon2))
+                fontFamily = FontFamily(Font(R.font.eng3))
             )
         }
     }
@@ -525,7 +525,7 @@ fun SplashScreen(
     val arabicFont = FontFamily(Font(if (currentLocale == Locale("ar")) {
         R.font.arbic_font_bold_2
     } else {
-        R.font.fon2
+        R.font.eng3
     }))
 
     // Animation states

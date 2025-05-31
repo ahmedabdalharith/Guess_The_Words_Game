@@ -71,7 +71,7 @@ fun RatingDialog(
     FontFamily(Font(if (currentLocale == Locale("ar")) {
         R.font.arbic_font_bold_2
     } else {
-        R.font.en_font
+        R.font.eng3
     }))
     if (showDialog) {
         BasicAlertDialog(
@@ -156,7 +156,7 @@ private fun RatingDialogContent(
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White,
-            fontFamily = FontFamily(Font(R.font.arbic_font_bold_2)),
+            fontFamily = FontFamily.Default,
             textAlign = TextAlign.Center,
             style = TextStyle(
                 shadow = Shadow(
@@ -174,7 +174,7 @@ private fun RatingDialogContent(
             fontSize = 20.sp,
             fontWeight = FontWeight.Normal,
             color = Color.White,
-            fontFamily = FontFamily(Font(R.font.arbic_font_bold_2)),
+            fontFamily = FontFamily.Default,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(bottom = 8.dp)
         )
@@ -183,7 +183,7 @@ private fun RatingDialogContent(
             fontSize = 20.sp,
             fontWeight = FontWeight.Normal,
             color = Color.Yellow,
-            fontFamily = FontFamily(Font(R.font.arbic_font_bold_2)),
+            fontFamily = FontFamily.Default,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(bottom = 24.dp)
         )

@@ -363,4 +363,66 @@
     <string name="vip">VIP</string>
     <string name="ads">ADS</string>
     <string name="default_web_client_id" />
+
+    <!-- Username Dialog Strings -->
+    <string name="choose_name">اختر اسم</string>
+    <string name="choose_name_description">اختر الاسم الذي تريد ان يره اللاعبين الاخرين</string>
+    <string name="enter_name_placeholder">ادخل اسم</string>
+    <string name="name_change_note">يمكنك تغيير الاسم لاحقا*</string>
+    <string name="refresh_content_description">تحديث</string>
+    <string name="close_content_description">إغلاق</string>
+
+
+    <string name="change_name">هل تريد تغيير الاسم ؟</string>
+    <string name="name_changed_successfully">تم تغير اسم المستخدم بنجاح</string>
+
+
+    <!-- Level Unlock Dialog Strings -->
+    <string name="level_unlock_title">فتح مستوى</string>
+    <string name="level_unlock_subtitle">لفتح هذا المستوى</string>
+    <string name="unlock_button">افتح الآن\n %1$d🪙</string>
+
+    <!-- Content Descriptions -->
+    <string name="content_description_unlock_icon">أيقونة فتح القفل</string>
+    <string name="content_description_stars">النجوم</string>
+
+    <string name="not_enough_coins"> لاتمتلك ما يكفي من العملات </string>
+
+    <!-- Out of Lives Dialog -->
+    <string name="out_of_lives_title">خارج الأرواح</string>
+    <string name="next_life_time">حان الوقت للحياة القادمة:</string>
+    <string name="add_life_continue">أضف حياة لمواصلة اللعب</string>
+    <string name="refill">إعادة تعبئة</string>
+    <string name="get_one_life">احصل على حياة واحدة</string>
+    <string name="become_vip">تصبح VIP</string>
+    <string name="unlock_special_levels">فتح مستويات\nخاصة!</string>
+
+    <!-- Content descriptions -->
+    <string name="empty_heart_desc">قلب فارغ</string>
+    <string name="heart_icon_desc">أيقونة القلب</string>
+    <string name="vip_background_desc">خلفية VIP</string>
+    <string name="open_next_level" >فتح المستوى التالي</string>
+
+
+    <string name="welcome_back">أهلاً بك مرة أخرى!</string>
+    <string name="login_subtitle">سجل دخولك للمتابعة في رحلتك</string>
+    <string name="email">البريد الإلكتروني</string>
+    <string name="password">كلمة المرور</string>
+    <string name="login">تسجيل الدخول</string>
+    <string name="forgot_password">نسيت كلمة المرور؟</string>
+    <string name="dont_have_account">ليس لديك حساب؟</string>
+    <string name="register_now">سجل الآن</string>
+    <string name="continue_as_guest">المتابعة كضيف</string>
+    <string name="app_logo">شعار التطبيق</string>
+    <string name="please_fill_all_fields">يرجى ملء جميع الحقول</string>
+    <string name="invalid_email_format">تنسيق البريد الإلكتروني غير صحيح</string>
+    <string name="user_not_found">المستخدم غير موجود</string>
+    <string name="invalid_password">كلمة المرور غير صحيحة</string>
+    <string name="login_failed">فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.</string>
+    <string name="password_reset_sent">تم إرسال رابط إعادة تعيين كلمة المرور</string>
+    <string name="enter_email_for_reset">أدخل بريدك الإلكتروني لإعادة تعيين كلمة المرور</string>
+    <string name="loading_ad">تحميل الاعلان</string>
+    <string name="question_image_desc">Question Image</string>
+
+
 </resources>

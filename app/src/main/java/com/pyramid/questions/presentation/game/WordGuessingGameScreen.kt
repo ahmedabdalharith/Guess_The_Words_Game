@@ -1,10 +1,13 @@
 package com.pyramid.questions.presentation.game
 
+import android.content.Context
 import android.content.res.Configuration
-import androidx.compose.animation.core.FastOutSlowInEasing
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.util.Log
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -26,6 +29,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -39,12 +43,10 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -60,7 +62,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -71,13 +72,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import com.pyramid.questions.R
 import com.pyramid.questions.data.local.GamePreferencesManager
+import com.pyramid.questions.data.remote.BannerAdView
+import com.pyramid.questions.data.remote.rememberAdMobManager
+import com.pyramid.questions.domain.model.LetterData
+import com.pyramid.questions.domain.model.Question
+import com.pyramid.questions.domain.model.QuestionCategory
 import com.pyramid.questions.presentation.components.ControlButton
 import com.pyramid.questions.presentation.components.LivesProgressIndicator
+import com.pyramid.questions.presentation.components.OutOfLivesDialog
+import com.pyramid.questions.presentation.components.SuccessSection
 import com.pyramid.questions.presentation.components.TopGameBar
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import java.io.ByteArrayOutputStream
 import java.util.Locale
 
 
@@ -95,50 +105,17 @@ fun WordGuessingGameApp() {
     }
 }
 
-suspend fun animatePosition(
-    startPosition: Offset,
-    endPosition: Offset,
-    updatePosition: (Offset) -> Unit
-) {
-    val animationSpec = tween<Float>(
-        durationMillis = 250,
-        easing = FastOutSlowInEasing
-    )
-
-    animate(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = animationSpec
-    ) { value, _ ->
-        val x = startPosition.x + (endPosition.x - startPosition.x) * value
-        val y = startPosition.y + (endPosition.y - startPosition.y) * value
-        updatePosition(Offset(x, y))
-    }
-}
-
 @Composable
-fun ArabicLetterButtonWithPosition(
+fun LetterBox(
     letter: String,
     onClick: () -> Unit,
     isSelected: Boolean = false,
     isDeleted: Boolean = false,
     onPositionCaptured: (Offset, IntSize) -> Unit
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-    val scale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = if (!isSelected && !isDeleted) 1.05f else 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "scale"
-    )
-
     Box(
         modifier = Modifier
-            .size(48.dp)
-            .scale(scale)
+            .size(40.dp)
             .shadow(4.dp, RoundedCornerShape(8.dp))
             .clip(RoundedCornerShape(8.dp))
             .background(
@@ -149,18 +126,24 @@ fun ArabicLetterButtonWithPosition(
                             Color(0x44CCCCCC)
                         )
                     )
+
                     isSelected -> Brush.radialGradient(
                         colors = listOf(
                             Color(0xFF0E1E58),
                             Color(0xFF0E1E58)
                         )
                     )
+
                     else -> Brush.radialGradient(
                         colors = listOf(Color.White, Color(0xFFF0F0F0))
                     )
                 }
             )
-            .border(1.dp, if (!isSelected && !isDeleted) Color(0xFF5270BF) else Color.Transparent, RoundedCornerShape(8.dp))
+            .border(
+                1.dp,
+                if (!isSelected && !isDeleted) Color(0xFF5270BF) else Color.Transparent,
+                RoundedCornerShape(8.dp)
+            )
             .clickable(
                 enabled = !isSelected && !isDeleted,
                 onClick = onClick
@@ -175,7 +158,7 @@ fun ArabicLetterButtonWithPosition(
             color = if (isSelected)
                 Color(0xFF0E1E58) else Color.Black,
             fontSize = 26.sp,
-            fontFamily = FontFamily(Font(R.font.arbic_font_bold_2)),
+            fontFamily = FontFamily.Default,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         )
@@ -183,7 +166,9 @@ fun ArabicLetterButtonWithPosition(
 }
 
 @Composable
-fun QuestionBar() {
+fun QuestionBar(
+    question: Question
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -200,7 +185,7 @@ fun QuestionBar() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = stringResource(R.string.guess_country_question),
+                text = question.questionText,
                 color = Color.White,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
@@ -213,11 +198,11 @@ fun QuestionBar() {
 @Composable
 fun ControlButtons(
     onHintClick: () -> Unit,
-    onSkipClick: () -> Unit,
     onDeleteLetter: () -> Unit,
     onClearAll: () -> Unit,
     onDeleteRandomLetters: () -> Unit,
-    isDeleteRandomEnabled: Boolean
+    isDeleteRandomEnabled: Boolean,
+    selectedLettersCount: Int
 ) {
     Row(
         modifier = Modifier
@@ -227,7 +212,8 @@ fun ControlButtons(
                 Brush.verticalGradient(
                     colors = listOf(Color(0xFF3766E0), Color(0xFF2E59BC))
                 )
-            ).padding(8.dp),
+            )
+            .padding(8.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -236,7 +222,7 @@ fun ControlButtons(
             backgroundColor = Color(0xFFE74C3C),
             onClick = onDeleteLetter,
             label = stringResource(R.string.delete_button),
-            enabled = isDeleteRandomEnabled,
+            enabled = selectedLettersCount > 0,
         )
         ControlButton(
             iconRes = R.drawable.refresh_ic,
@@ -259,90 +245,58 @@ fun ControlButtons(
             label = stringResource(R.string.hint_button),
             coinCost = 50
         )
-        ControlButton(
-            iconRes = R.drawable.arrow_forward_ic,
-            backgroundColor = Color(0xFF55ACEE),
-            onClick = onSkipClick,
-            label = stringResource(R.string.skip_button)
-        )
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun WordGuessingGameScreen(
-    imageId: Int = R.drawable.japanese_background,
-    navController: NavHostController
+    navController: NavHostController,
+    question: Question = Question(
+        questionText = "What is the capital of Japan?",
+        questionId = "1",
+        imageUrl = "https://res.cloudinary.com/dnsgxkndl/image/upload/v1748606625/img4_l53ecx.jpg",
+        answer = "Japan",
+        lettersPool = listOf('J', 'a', 'p', 'a', 'n','m', 'o', 'n'),
+        hint = listOf('J', 'a'),
+        level = "l1",
+        category = QuestionCategory.GENERAL
+    ).initializeAvailableLetters()
 ) {
-    val gameDataManager = remember { GameDataManager() }
-    val gameData = gameDataManager.getGameData()
+    var currentQuestion by remember { mutableStateOf(question) }
     val coroutineScope = rememberCoroutineScope()
     val density = LocalDensity.current
     val hapticFeedback = LocalHapticFeedback.current
+    val context = LocalContext.current
+    val preferencesManager = remember { GamePreferencesManager(context) }
 
-    var showSuccess by remember { mutableStateOf(gameDataManager.getShowSuccess()) }
-    var showError by remember { mutableStateOf(gameDataManager.getShowError()) }
+    preferencesManager.saveLives(5)
+
+    var showSuccess by remember { mutableStateOf(false) }
+    var showError by remember { mutableStateOf(false) }
+    var showSuccessAnimation by remember { mutableStateOf(false) }
+    var showOutOfLivesDialog by remember { mutableStateOf(false) }
     var isDeleteRandomEnabled by remember { mutableStateOf(true) }
 
     var movingLetter by remember { mutableStateOf<LetterData?>(null) }
-    val availableLettersPositions = remember { mutableStateMapOf<Int, LetterPosition>() }
-    val answerPositions = remember { mutableStateMapOf<Int, LetterPosition>() }
-
-    var animatedPosition by remember { mutableStateOf(Offset.Zero) }
-    var letterSourcePosition by remember { mutableStateOf(Offset.Zero) }
-    var letterTargetPosition by remember { mutableStateOf(Offset.Zero) }
-
     var isLetterMoving by remember { mutableStateOf(false) }
     var movingLetterIndex by remember { mutableIntStateOf(-1) }
     var targetLetterIndex by remember { mutableIntStateOf(-1) }
-
     var pendingLetter by remember { mutableStateOf<Pair<Int, LetterData>?>(null) }
 
-    rememberUpdatedState(gameData.selectedLetters)
-    var selectedLettersCount by remember { mutableIntStateOf(gameData.selectedLetters.size) }
-    var currentLives by remember { mutableIntStateOf(5) }
+    val availableLettersPositions = remember { mutableStateMapOf<Int, LetterPosition>() }
+    val answerPositions = remember { mutableStateMapOf<Int, LetterPosition>() }
+    var animatedPosition by remember { mutableStateOf(Offset.Zero) }
+
+    var selectedLettersCount by remember { mutableIntStateOf(currentQuestion.selectedLetters.size) }
+    var currentLives by remember { mutableIntStateOf(preferencesManager.getLives()) }
+    var isRecharging by remember { mutableStateOf(preferencesManager.getIsRecharging()) }
+    var timeRemaining by remember { mutableIntStateOf(preferencesManager.getTimeRemaining()) }
     val maxLives = 5
+    val currentLocale = remember { Locale(preferencesManager.getLanguage()) }
+    val player = preferencesManager.getPlayer()
 
-    var isRecharging by remember { mutableStateOf(false) }
-    var timeRemaining by remember { mutableStateOf(1800) }
-
-    LaunchedEffect(isRecharging) {
-        if (isRecharging) {
-            while (timeRemaining > 0) {
-                delay(1000)
-                timeRemaining--
-
-                if (timeRemaining <= 0) {
-                    currentLives = maxLives
-                    isRecharging = false
-                    timeRemaining = 1800
-                }
-            }
-        }
-    }
-
-    LaunchedEffect(showSuccess) {
-        if (showSuccess) {
-            delay(2000)
-            gameDataManager.setShowSuccess(false)
-            showSuccess = false
-        }
-    }
-
-    LaunchedEffect(showError) {
-        if (showError) {
-            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-            delay(1500)
-            gameDataManager.setShowError(false)
-            showError = false
-            if (currentLives > 0) {
-                currentLives--
-                if (currentLives <= 0) {
-                    isRecharging = true
-                }
-            }
-        }
-    }
+    val isArabic = currentLocale.language == "ar"
 
     val infiniteTransition = rememberInfiniteTransition(label = "background")
     val backgroundAlpha by infiniteTransition.animateFloat(
@@ -354,320 +308,412 @@ fun WordGuessingGameScreen(
         ),
         label = "alpha"
     )
-    val context  = LocalContext.current
-    val preferencesManager = remember { GamePreferencesManager(context) }
-    val currentLocale = remember { Locale(preferencesManager.getLanguage()) }
-    FontFamily(Font(if (currentLocale == Locale("ar")) {
-        R.font.arbic_font_bold_2
-    } else {
-        R.font.en_font
-    }))
-    val playerStats = preferencesManager.getPlayerStats()
+
+    fun formatTime(seconds: Int): String {
+        val minutes = seconds / 60
+        val secs = seconds % 60
+        return String.format("%02d:%02d", minutes, secs)
+    }
+
+    fun handleLetterClick(letter: LetterData, letterIndex: Int) {
+        if (currentLives <= 0) {
+            showOutOfLivesDialog = true
+            return
+        }
+
+        if (!letter.isSelected && !letter.isDeleted) {
+            currentQuestion = currentQuestion.selectLetter(letter)
+            selectedLettersCount = currentQuestion.selectedLetters.size
+
+            if (currentQuestion.isGameWon()) {
+                showSuccess = true
+                showError = false
+            } else if (currentQuestion.selectedLetters.size == currentQuestion.answer.length) {
+                showError = true
+                showSuccess = false
+            }
+        }
+    }
+
+    fun continueToNextWord() {
+        showSuccess = false
+        showSuccessAnimation = false
+        currentQuestion = question.initializeAvailableLetters()
+        selectedLettersCount = 0
+        isDeleteRandomEnabled = true
+    }
+
+    LaunchedEffect(Unit) {
+        if (isRecharging) {
+            val startTime = preferencesManager.getRechargeStartTime()
+            val currentTime = System.currentTimeMillis()
+            val elapsedSeconds = ((currentTime - startTime) / 1000).toInt()
+            val remainingTime = 1800 - elapsedSeconds
+
+            if (remainingTime <= 0) {
+                currentLives = maxLives
+                isRecharging = false
+                timeRemaining = 1800
+                preferencesManager.saveLives(maxLives)
+                preferencesManager.saveIsRecharging(false)
+                preferencesManager.saveTimeRemaining(1800)
+            } else {
+                timeRemaining = remainingTime
+            }
+        }
+    }
+
+    LaunchedEffect(isRecharging, timeRemaining) {
+        if (isRecharging) {
+            while (timeRemaining > 0 && isRecharging) {
+                delay(1000)
+                timeRemaining--
+                preferencesManager.saveTimeRemaining(timeRemaining)
+
+                if (timeRemaining <= 0) {
+                    currentLives = maxLives
+                    isRecharging = false
+                    timeRemaining = 1800
+                    preferencesManager.saveLives(maxLives)
+                    preferencesManager.saveIsRecharging(false)
+                    preferencesManager.saveTimeRemaining(1800)
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(showError) {
+        if (showError) {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+            delay(1500)
+            showError = false
+
+            if (currentLives > 0) {
+                currentLives--
+                preferencesManager.saveLives(currentLives)
+
+                if (currentLives <= 0) {
+                    isRecharging = true
+                    timeRemaining = 1800
+                    preferencesManager.saveIsRecharging(true)
+                    preferencesManager.saveRechargeStartTime(System.currentTimeMillis())
+                    preferencesManager.saveTimeRemaining(1800)
+                    showOutOfLivesDialog = true
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(selectedLettersCount) {
+        for (i in currentQuestion.answer.indices) {
+            val hasLetter = i < currentQuestion.selectedLetters.size
+            if (answerPositions.containsKey(i)) {
+                answerPositions[i] = answerPositions[i]!!.copy(
+                    letter = if (hasLetter && i < currentQuestion.selectedLetters.size)
+                        currentQuestion.selectedLetters[i].letter.toString() else ""
+                )
+            }
+        }
+    }
+
+    LaunchedEffect(showSuccess) {
+        if (showSuccess) {
+            delay(500)
+            showSuccessAnimation = true
+        }
+    }
     CompositionLocalProvider(
         LocalContext provides LocalContext.current.createConfigurationContext(
             Configuration().apply { setLocale(currentLocale) }
         )
     ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF0C1638))
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.img2),
-                    contentDescription = stringResource(R.string.japanese_background_desc),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer(alpha = 0.4f),
-                    contentScale = ContentScale.Crop
-                )
-                TopGameBar(
-                    playerStats = playerStats,
-                    onOpenStore = {},
-                    onOpenProfile = {},
-                    backgroundColor = Color.Transparent,
-                    showDriver = false,
-                    onBackClicked = {
-                        navController.popBackStack()
-                    },
-                    fontFamily = FontFamily(Font(R.font.arbic_font_bold_2)),
-                )
-                LivesProgressIndicator(
-                    currentLives = currentLives,
-                    maxLives = maxLives,
-                    isRecharging = isRecharging,
-                    timeRemainingSeconds = timeRemaining,
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .graphicsLayer(alpha = backgroundAlpha)
-                        .padding(top = 16.dp)
-                )
-            }
-
-            QuestionBar()
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
 
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(280.dp)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color(0xFF13277A), Color(0xFF0E1E58))
-                        )
-                    ),
-                contentAlignment = Alignment.Center
+                    .fillMaxSize()
+                    .background(Color(0xFF0C1638))
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.padding(vertical = 16.dp)
-                ) {
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                Column(modifier = Modifier.fillMaxSize()) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
                     ) {
-                        val letterBoxes = updateAnswerBoxes(
-                            gameData = gameData,
-                            answerPositions = answerPositions,
-                            targetLetterIndex = targetLetterIndex,
-                            isLetterMoving = isLetterMoving,
-                            pendingLetter = pendingLetter,
-                            onPositionCaptured = { index, position, size ->
-                                answerPositions[index] = LetterPosition(
-                                    letter = if (index < gameData.selectedLetters.size)
-                                        gameData.selectedLetters[index].letter.toString() else "",
-                                    startPosition = position,
-                                    size = size
-                                )
-                            }
+                        Image(
+                            painter = rememberAsyncImagePainter(
+                                model = question.imageUrl
+                            ),
+                            contentDescription = stringResource(R.string.japanese_background_desc),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .graphicsLayer(alpha = 0.4f),
+                            contentScale = ContentScale.Crop
+                        )
+                        TopGameBar(
+                            player = player,
+                            onOpenStore = {},
+                            onOpenProfile = {},
+                            backgroundColor = Color.Transparent,
+                            showDriver = false,
+                            onBackClicked = { navController.popBackStack() },
+                            fontFamily = FontFamily.Default
                         )
 
-                        letterBoxes.forEach { letterBox ->
-                            letterBox()
-                        }
+                        LivesProgressIndicator(
+                            currentLives = currentLives,
+                            maxLives = maxLives,
+                            isRecharging = isRecharging,
+                            timeRemainingSeconds = timeRemaining,
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .graphicsLayer(alpha = backgroundAlpha)
+                                .padding(top = 16.dp)
+                        )
                     }
 
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    QuestionBar(question)
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(280.dp)
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(Color(0xFF13277A), Color(0xFF0E1E58))
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.padding(vertical = 16.dp)
                         ) {
-                            val firstRowIndices = (0 until 5).toList().reversed()
-                            for (i in firstRowIndices) {
-                                if (i < gameData.availableLetters.size) {
-                                    val letter = gameData.availableLetters[i]
-                                    if (isLetterMoving && movingLetterIndex == i) {
-                                        Box(
-                                            modifier = Modifier.size(48.dp)
-                                        )
-                                    } else {
-                                        ArabicLetterButtonWithPosition(
-                                            letter = letter.letter.toString(),
-                                            onClick = {
-                                                if (!letter.isSelected && !letter.isDeleted) {
-                                                    movingLetterIndex = i
-                                                    targetLetterIndex = gameData.selectedLetters.size
-
-                                                    letterSourcePosition = availableLettersPositions[i]?.startPosition ?: Offset.Zero
-                                                    letterTargetPosition = answerPositions[targetLetterIndex]?.startPosition ?: Offset.Zero
-
-                                                    isLetterMoving = true
-                                                    movingLetter = letter
-
-                                                    pendingLetter = Pair(targetLetterIndex, letter)
-
-                                                    coroutineScope.launch {
-                                                        animatePosition(
-                                                            letterSourcePosition,
-                                                            letterTargetPosition
-                                                        ) { currentPosition ->
-                                                            animatedPosition = currentPosition
-                                                        }
-
-                                                        isLetterMoving = false
-                                                        movingLetter = null
-
-                                                        gameDataManager.selectLetter(letter)
-                                                        selectedLettersCount = gameData.selectedLetters.size
-
-                                                        delay(100)
-                                                        pendingLetter = null
-
-                                                        showSuccess = gameDataManager.getShowSuccess()
-                                                        showError = gameDataManager.getShowError()
-                                                    }
-                                                }
-                                            },
-                                            isSelected = letter.isSelected,
-                                            isDeleted = letter.isDeleted,
-                                            onPositionCaptured = { position, size ->
-                                                availableLettersPositions[i] = LetterPosition(
-                                                    letter = letter.letter.toString(),
-                                                    startPosition = position,
-                                                    size = size
-                                                )
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            val secondRowIndices = (5 until gameData.availableLetters.size).toList().reversed()
-                            for (i in secondRowIndices) {
-                                val letter = gameData.availableLetters[i]
-                                if (isLetterMoving && movingLetterIndex == i) {
-                                    Box(
-                                        modifier = Modifier.size(48.dp)
-                                    )
-                                } else {
-                                    ArabicLetterButtonWithPosition(
-                                        letter = letter.letter.toString(),
-                                        onClick = {
-                                            if (!letter.isSelected && !letter.isDeleted) {
-                                                movingLetterIndex = i
-                                                targetLetterIndex = gameData.selectedLetters.size
-
-                                                letterSourcePosition = availableLettersPositions[i]?.startPosition ?: Offset.Zero
-                                                letterTargetPosition = answerPositions[targetLetterIndex]?.startPosition ?: Offset.Zero
-
-                                                isLetterMoving = true
-                                                movingLetter = letter
-
-                                                pendingLetter = Pair(targetLetterIndex, letter)
-
-                                                coroutineScope.launch {
-                                                    animatePosition(
-                                                        letterSourcePosition,
-                                                        letterTargetPosition
-                                                    ) { currentPosition ->
-                                                        animatedPosition = currentPosition
-                                                    }
-
-                                                    isLetterMoving = false
-                                                    movingLetter = null
-
-                                                    gameDataManager.selectLetter(letter)
-                                                    selectedLettersCount = gameData.selectedLetters.size
-
-                                                    delay(100)
-                                                    pendingLetter = null
-
-                                                    showSuccess = gameDataManager.getShowSuccess()
-                                                    showError = gameDataManager.getShowError()
-                                                }
-                                            }
-                                        },
-                                        isSelected = letter.isSelected,
-                                        isDeleted = letter.isDeleted,
-                                        onPositionCaptured = { position, size ->
-                                            availableLettersPositions[i] = LetterPosition(
-                                                letter = letter.letter.toString(),
+                            CompositionLocalProvider(
+                                LocalLayoutDirection provides if (isArabic) LayoutDirection.Rtl else LayoutDirection.Ltr
+                            ) {
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(
+                                        8.dp,
+                                        Alignment.CenterHorizontally
+                                    ),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp)
+                                ) {
+                                    val letterBoxes = updateAnswerBoxes(
+                                        question = currentQuestion,
+                                        answerPositions = answerPositions,
+                                        targetLetterIndex = targetLetterIndex,
+                                        isLetterMoving = isLetterMoving,
+                                        pendingLetter = pendingLetter,
+                                        onPositionCaptured = { index, position, size ->
+                                            answerPositions[index] = LetterPosition(
+                                                letter = if (index < currentQuestion.selectedLetters.size)
+                                                    currentQuestion.selectedLetters[index].letter.toString() else "",
                                                 startPosition = position,
                                                 size = size
                                             )
                                         }
                                     )
+                                    letterBoxes.forEach { letterBox -> letterBox() }
+                                }
+                            }
+
+                            if (showSuccess) {
+                                SuccessSection(
+                                    level = currentQuestion.level,
+                                    answer = currentQuestion.answer,
+                                    onContinueClick = { continueToNextWord() },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                                )
+                            } else {
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(
+                                            8.dp,
+                                            Alignment.CenterHorizontally
+                                        ),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        val firstRowIndices = (0 until minOf(
+                                            5,
+                                            currentQuestion.availableLetters.size
+                                        )).toList().reversed()
+                                        for (i in firstRowIndices) {
+                                            val letter = currentQuestion.availableLetters[i]
+                                            if (isLetterMoving && movingLetterIndex == i) {
+                                                Box(modifier = Modifier.size(48.dp))
+                                            } else {
+                                                LetterBox(
+                                                    letter = letter.letter.toString(),
+                                                    onClick = { handleLetterClick(letter, i) },
+                                                    isSelected = letter.isSelected,
+                                                    isDeleted = letter.isDeleted,
+                                                    onPositionCaptured = { position, size ->
+                                                        availableLettersPositions[i] =
+                                                            LetterPosition(
+                                                                letter = letter.letter.toString(),
+                                                                startPosition = position,
+                                                                size = size
+                                                            )
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    if (currentQuestion.availableLetters.size > 5) {
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(
+                                                8.dp,
+                                                Alignment.CenterHorizontally
+                                            ),
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            val secondRowIndices =
+                                                (5 until currentQuestion.availableLetters.size).toList()
+                                                    .reversed()
+                                            for (i in secondRowIndices) {
+                                                val letter = currentQuestion.availableLetters[i]
+                                                if (isLetterMoving && movingLetterIndex == i) {
+                                                    Box(modifier = Modifier.size(48.dp))
+                                                } else {
+                                                    LetterBox(
+                                                        letter = letter.letter.toString(),
+                                                        onClick = { handleLetterClick(letter, i) },
+                                                        isSelected = letter.isSelected,
+                                                        isDeleted = letter.isDeleted,
+                                                        onPositionCaptured = { position, size ->
+                                                            availableLettersPositions[i] =
+                                                                LetterPosition(
+                                                                    letter = letter.letter.toString(),
+                                                                    startPosition = position,
+                                                                    size = size
+                                                                )
+                                                        }
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }
-                }
 
-                if (isLetterMoving && movingLetter != null) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .offset(
-                                x = with(density) { (animatedPosition.x / density.density).dp },
-                                y = with(density) { (animatedPosition.y / density.density).dp }
-                            )
-                            .background(Color.White, RoundedCornerShape(8.dp))
-                            .border(1.5.dp, Color(0xFF5270BF), RoundedCornerShape(8.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = movingLetter!!.letter.toString(),
-                            color = Color.Black,
-                            fontSize = 26.sp,
-                            fontFamily = FontFamily(Font(R.font.arbic_font_bold_2)),
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-            }
-
-            ControlButtons(
-                onHintClick = {
-                    val correctLetters = gameData.targetWord.toCharArray().distinct()
-                    val availableCorrectLetters = gameData.availableLetters.filter {
-                        it.letter in correctLetters && !it.isSelected && !it.isDeleted
-                    }
-
-                    if (availableCorrectLetters.isNotEmpty()) {
-                        val randomCorrectLetter = availableCorrectLetters.random()
-                        val emptyPosition = gameData.selectedLetters.size
-
-                        if (emptyPosition < gameData.targetWord.length) {
-                            gameDataManager.selectLetter(randomCorrectLetter)
-                            selectedLettersCount = gameData.selectedLetters.size
+                        if (isLetterMoving && movingLetter != null) {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .offset(
+                                        x = with(density) { (animatedPosition.x / density.density).dp },
+                                        y = with(density) { (animatedPosition.y / density.density).dp }
+                                    )
+                                    .background(Color.White, RoundedCornerShape(8.dp))
+                                    .border(1.5.dp, Color(0xFF5270BF), RoundedCornerShape(8.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = movingLetter!!.letter.toString(),
+                                    color = Color.Black,
+                                    fontSize = 26.sp,
+                                    fontFamily = FontFamily.Default,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
                     }
-                },
-                onSkipClick = {
-                    gameDataManager.skipWord()
-                    selectedLettersCount = 0
-                },
-                onDeleteLetter = {
-                    gameDataManager.deleteLetter()
-                    pendingLetter = null
-                    selectedLettersCount = gameData.selectedLetters.size
-                    showSuccess = gameDataManager.getShowSuccess()
-                    showError = gameDataManager.getShowError()
-                },
-                onClearAll = {
-                    gameDataManager.clearAllLetters()
-                    pendingLetter = null
-                    selectedLettersCount = 0
-                    showSuccess = gameDataManager.getShowSuccess()
-                    showError = gameDataManager.getShowError()
-                },
-                onDeleteRandomLetters = {
-                    if (isDeleteRandomEnabled) {
-                        gameDataManager.deleteRandomLetters(2)
-                        isDeleteRandomEnabled = false
+                    if (!showSuccess) {
+                        ControlButtons(
+                            onHintClick = {
+                                if (currentLives <= 0) {
+                                    showOutOfLivesDialog = true
+                                    return@ControlButtons
+                                }
+
+                                currentQuestion = currentQuestion.useHint()
+                                selectedLettersCount = currentQuestion.selectedLetters.size
+
+                                if (currentQuestion.isGameWon()) {
+                                    showSuccess = true
+                                    showError = false
+                                }
+                            },
+                            onDeleteLetter = {
+                                currentQuestion = currentQuestion.deleteLetter()
+                                pendingLetter = null
+                                selectedLettersCount = currentQuestion.selectedLetters.size
+                                showSuccess = false
+                                showError = false
+                            },
+                            onClearAll = {
+                                currentQuestion = currentQuestion.clearAllLetters()
+                                pendingLetter = null
+                                selectedLettersCount = 0
+                                showSuccess = false
+                                showError = false
+                            },
+                            onDeleteRandomLetters = {
+                                if (currentLives <= 0) {
+                                    showOutOfLivesDialog = true
+                                    return@ControlButtons
+                                }
+
+                                if (isDeleteRandomEnabled) {
+                                    currentQuestion = currentQuestion.deleteRandomLetters(2)
+                                    isDeleteRandomEnabled = false
+                                }
+                            },
+                            isDeleteRandomEnabled = isDeleteRandomEnabled,
+                            selectedLettersCount = selectedLettersCount
+                        )
                     }
+                    BannerAdView(
+                        modifier = Modifier.fillMaxWidth(),
+                        onAdLoaded = {
+                            println("Banner ad loaded successfully!")
+                        },
+                        onAdFailedToLoad = { error ->
+                            println("Banner ad failed: $error")
+                        }
+                    )
+
+                }
+            }
+
+            OutOfLivesDialog(
+                onCloseClick = {
+                    showOutOfLivesDialog = false
+                    navController.popBackStack()
                 },
-                isDeleteRandomEnabled = isDeleteRandomEnabled
+                onBuyLivesClick = {
+                    showOutOfLivesDialog = false
+                },
+                onWatchAdClick = {
+                    currentLives = 1
+                    preferencesManager.saveLives(currentLives)
+                    isRecharging = false
+                    preferencesManager.saveIsRecharging(false)
+                    showOutOfLivesDialog = false
+                },
+                onBecomeVipClick = {
+                    showOutOfLivesDialog = false
+                },
+                onJoinClick = {
+                    showOutOfLivesDialog = false
+                },
+                showDialog = showOutOfLivesDialog,
+                timeRemaining = formatTime(timeRemaining)
             )
         }
-    }
-
-    LaunchedEffect(selectedLettersCount) {
-        for (i in gameData.targetWord.indices) {
-            val hasLetter = i < gameData.selectedLetters.size
-            if (answerPositions.containsKey(i)) {
-                answerPositions[i] = answerPositions[i]!!.copy(
-                    letter = if (hasLetter && i < gameData.selectedLetters.size)
-                        gameData.selectedLetters[i].letter.toString() else ""
-                )
-            }
-        }
-    }
     }
 }
 @Composable
@@ -686,6 +732,7 @@ fun EnhancedLetterBox(
             Color(0xFF1B5E20),
             listOf(Color(0xFF81C784), Color(0xFF2E7D32))
         )
+
         isHintLetter -> Triple(
             Brush.radialGradient(
                 colors = listOf(Color(0xFFFFDD55), Color(0xFFFFC800)),
@@ -694,6 +741,7 @@ fun EnhancedLetterBox(
             Color(0xFF805E07),
             listOf(Color(0xFFFFEFB1), Color(0xFF8B6B00))
         )
+
         letter.isNotEmpty() -> Triple(
             Brush.radialGradient(
                 colors = listOf(Color.White, Color(0xFFF0F0F0)),
@@ -702,6 +750,7 @@ fun EnhancedLetterBox(
             Color(0xFF9E9E9E),
             listOf(Color(0xFFE0E0E0), Color(0xFF9E9E9E))
         )
+
         else -> Triple(
             Brush.radialGradient(
                 colors = listOf(Color(0xFF3A5498), Color(0xFF2C4085)),
@@ -745,7 +794,7 @@ fun EnhancedLetterBox(
                     text = letter,
                     color = textColor,
                     fontSize = 20.sp,
-                    fontFamily = FontFamily(Font(R.font.arbic_font_bold_2)),
+                    fontFamily = FontFamily.Default,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
                 )
@@ -759,7 +808,7 @@ fun EnhancedLetterBox(
                     .offset(x = 28.dp, y = (-4).dp)
                     .background(
                         Color(0xFF81C784),
-                        shape = androidx.compose.foundation.shape.CircleShape
+                        shape = CircleShape
                     )
             )
         }
@@ -771,7 +820,7 @@ fun EnhancedLetterBox(
                     .offset(x = 28.dp, y = (-4).dp)
                     .background(
                         Color(0xFFFFC107),
-                        shape = androidx.compose.foundation.shape.CircleShape
+                        shape = CircleShape
                     )
             )
         }
@@ -779,21 +828,29 @@ fun EnhancedLetterBox(
 }
 
 fun updateAnswerBoxes(
-    gameData: GameData,
+    question: Question,
     answerPositions: MutableMap<Int, LetterPosition>,
     targetLetterIndex: Int,
     isLetterMoving: Boolean,
     pendingLetter: Pair<Int, LetterData>?,
     onPositionCaptured: (Int, Offset, IntSize) -> Unit
 ): List<@Composable () -> Unit> {
-    val reversedIndices = gameData.targetWord.indices.reversed().toList()
+    val reversedIndices = question.answer.indices.reversed().toList()
 
     return reversedIndices.mapNotNull { i ->
-        if (gameData.targetWord[i] == ' ') {
-            if (i < gameData.targetWord.length - 1 && gameData.targetWord[i + 1] == ' ') {
+        if (question.answer[i] == ' ') {
+            if (i < question.answer.length - 1 && question.answer[i + 1] == ' ') {
                 return@mapNotNull {
                     Row {
-                        createLetterBox(i, gameData, answerPositions, targetLetterIndex, isLetterMoving, pendingLetter, onPositionCaptured)
+                        createLetterBox(
+                            i,
+                            question,
+                            answerPositions,
+                            targetLetterIndex,
+                            isLetterMoving,
+                            pendingLetter,
+                            onPositionCaptured
+                        )
                         Box(modifier = Modifier.size(16.dp, 44.dp))
                     }
                 }
@@ -801,29 +858,36 @@ fun updateAnswerBoxes(
             null
         } else {
             return@mapNotNull {
-                createLetterBox(i, gameData, answerPositions, targetLetterIndex, isLetterMoving, pendingLetter, onPositionCaptured)
+                createLetterBox(
+                    i,
+                    question,
+                    answerPositions,
+                    targetLetterIndex,
+                    isLetterMoving,
+                    pendingLetter,
+                    onPositionCaptured
+                )
             }
         }
     }
 }
-
 @Composable
 private fun createLetterBox(
     index: Int,
-    gameData: GameData,
+    question: Question,
     answerPositions: MutableMap<Int, LetterPosition>,
     targetLetterIndex: Int,
     isLetterMoving: Boolean,
     pendingLetter: Pair<Int, LetterData>?,
     onPositionCaptured: (Int, Offset, IntSize) -> Unit
 ) {
-    val hasLetter = index < gameData.selectedLetters.size
+    val hasLetter = index < question.selectedLetters.size
     val isTargetForMovingLetter = isLetterMoving && targetLetterIndex == index
-    val currentLetter = if (hasLetter) gameData.selectedLetters[index].letter.toString() else ""
+    val currentLetter = if (hasLetter) question.selectedLetters[index].letter.toString() else ""
 
     val isCorrectPosition = hasLetter &&
-            index < gameData.targetWord.length &&
-            gameData.selectedLetters[index].letter.toLowerCase() == gameData.targetWord[index].toLowerCase()
+            index < question.answer.length &&
+            question.selectedLetters[index].letter.lowercaseChar() == question.answer[index].lowercase().first()
 
     val isHintLetter = false
 
@@ -847,6 +911,7 @@ private fun createLetterBox(
         }
     )
 }
+
 @Preview(showBackground = true)
 @Composable
 fun WordGuessingGamePreview() {

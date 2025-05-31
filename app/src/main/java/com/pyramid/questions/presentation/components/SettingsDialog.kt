@@ -83,7 +83,7 @@ fun SettingsDialog(
     val arabicFont = FontFamily(Font(if (currentLocale == Locale("ar")) {
         R.font.arbic_font_bold_2
     } else {
-        R.font.en_font
+        R.font.eng3
     }))
 
     // استخدام state محلية لتتبع حالة الإعدادات مع القيم الأولية من PreferencesManager

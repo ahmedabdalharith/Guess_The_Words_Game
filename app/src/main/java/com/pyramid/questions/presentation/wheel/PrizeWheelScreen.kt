@@ -1,9 +1,12 @@
 package com.pyramid.questions.presentation.wheel
 
+import android.app.Activity
 import android.content.Context
 import android.content.res.Configuration
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.EaseInOutQuad
@@ -32,6 +35,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,6 +43,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -63,6 +68,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -72,12 +78,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.pyramid.questions.R
 import com.pyramid.questions.data.local.GamePreferencesManager
+import com.pyramid.questions.data.remote.AdMobManager
+import com.pyramid.questions.data.remote.rememberAdMobManager
 import com.pyramid.questions.presentation.components.RadialRaysBackground
 import com.pyramid.questions.presentation.components.TopGameBar
 import com.pyramid.questions.presentation.components.YellowButtonWithIcon
@@ -90,12 +99,17 @@ import kotlin.math.floor
 import kotlin.math.min
 import kotlin.math.sin
 
+
 @Composable
 fun WheelPointer(
     modifier: Modifier = Modifier,
     isSpinning: Boolean,
     imageRes: Int,
-    currentPrize: WheelPrize = WheelPrize(R.drawable.coin4, "100", stringResource(R.string.coin_100))
+    currentPrize: WheelPrize = WheelPrize(
+        R.drawable.coin4,
+        "100",
+        stringResource(R.string.coin_100)
+    )
 ) {
     val vibrationTransition = rememberInfiniteTransition(label = "vibration")
     val offsetX = vibrationTransition.animateFloat(
@@ -121,7 +135,7 @@ fun WheelPointer(
         Row(
             modifier = Modifier
                 .padding(4.dp)
-                .padding(top=28.dp)
+                .padding(top = 28.dp)
                 .align(Alignment.TopCenter),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
@@ -129,15 +143,15 @@ fun WheelPointer(
             Image(
                 painterResource(currentPrize.imageResId),
                 contentDescription = null,
-                modifier= Modifier.size(42.dp),
+                modifier = Modifier.size(42.dp),
                 contentScale = ContentScale.Crop
             )
-            if (currentPrize.text != stringResource(R.string.delete_two_letters)){
+            if (currentPrize.text != stringResource(R.string.delete_two_letters)) {
                 Text(
                     text = currentPrize.text,
                     color = Color.White,
                     fontSize = 18.sp,
-                    fontFamily = FontFamily(Font(R.font.arbic_font_bold_2))
+                    fontFamily = FontFamily.Default
                 )
             }
         }
@@ -186,7 +200,6 @@ fun CenterSpinButton3D(
             ),
         contentAlignment = Alignment.Center
     ) {
-        // Inner shadow effect
         Canvas(modifier = Modifier.matchParentSize()) {
             drawCircle(
                 brush = Brush.radialGradient(
@@ -268,42 +281,53 @@ fun SpinWheelScreen(
     navController: NavHostController
 ) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val preferencesManager = remember { GamePreferencesManager(navController.context) }
+
     var isSpinning by remember { mutableStateOf(false) }
-    var isSpined by remember { mutableStateOf(false) }
     var targetRotation by remember { mutableFloatStateOf(0f) }
     val rotation = remember { Animatable(0f) }
     var showPrizeDialog by remember { mutableStateOf(false) }
     var currentPrize by remember { mutableStateOf<WheelPrize?>(null) }
     var currentPointingPrize by remember { mutableStateOf<WheelPrize?>(null) }
     var isConfettiVisible by remember { mutableStateOf(false) }
+    var timeRemaining by remember { mutableLongStateOf(0L) }
+    var canSpin by remember { mutableStateOf(preferencesManager.isSpinAllowed()) }
+    var isLoadingAd by remember { mutableStateOf(false) }
+
     val lightAnimator = remember { Animatable(0f) }
     val bulbColors = remember {
         listOf(
-            Color(0xFFFFD700), // Gold
-            Color(0xFFE0E0E0), // Silver
-            Color(0xFFFFB74D), // Light Orange
-            Color(0xFFFFD54F)  // Light Yellow
+            Color(0xFFFFD700),
+            Color(0xFFE0E0E0),
+            Color(0xFFFFB74D),
+            Color(0xFFFFD54F)
         )
+    }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            canSpin = preferencesManager.isSpinAllowed()
+            if (!canSpin) {
+                timeRemaining = preferencesManager.getTimeUntilNextSpin()
+            }
+            delay(1000)
+        }
     }
 
     LaunchedEffect(isSpinning) {
         if (isSpinning) {
-            // Fast blinking while spinning
-            while(isSpinning) {
+            while (isSpinning) {
                 lightAnimator.animateTo(1f, tween(200))
                 lightAnimator.animateTo(0f, tween(200))
             }
         } else {
-            while(true) {
+            while (true) {
                 lightAnimator.animateTo(1f, tween(800))
                 lightAnimator.animateTo(0f, tween(800))
             }
         }
     }
-
-    val context = LocalContext.current
-//    val wheelSpinSound = MediaPlayer.create(context, R.raw.notification)
-//    val victorySound = MediaPlayer.create(context, R.raw.bell_notification)
 
     val prizes = getPrizesList()
 
@@ -316,203 +340,270 @@ fun SpinWheelScreen(
         }
     }
 
-    val preferencesManager = remember { GamePreferencesManager(navController.context) }
     val currentLocale = remember { Locale(preferencesManager.getLanguage()) }
-    FontFamily(Font(if (currentLocale == Locale("ar")) {
-        R.font.arbic_font_bold_2
-    } else {
-        R.font.en_font
-    }))
-    val playerStats =preferencesManager.getPlayerStats()
+    val Player = preferencesManager.getPlayer()
+    val adMobManager = rememberAdMobManager()
+
+    fun spinWheel() {
+        if (!isSpinning) {
+            isSpinning = true
+            showPrizeDialog = false
+            currentPrize = null
+
+            preferencesManager.setLastSpinTime(System.currentTimeMillis())
+            canSpin = false
+
+            scope.launch {
+                try {
+                    // wheelSpinSound.start()
+                } catch (e: Exception) {
+                    Log.e("SpinWheel", "Error playing spin sound", e)
+                }
+            }
+
+            val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+            if (vibrator?.hasVibrator() == true) {
+                vibrator.vibrate(
+                    VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE)
+                )
+            }
+
+            val spinCount = (5..8).random()
+            val extraAngle = (0..359).random().toFloat()
+            targetRotation = rotation.value + (spinCount * 360f) + extraAngle
+
+            scope.launch {
+                rotation.animateTo(
+                    targetValue = targetRotation,
+                    animationSpec = tween(
+                        durationMillis = 7000,
+                        easing = CubicBezierEasing(0.35f, 0.0f, 0.25f, 1.0f)
+                    )
+                )
+
+                val normalizedRotation = (rotation.value % 360 + 360) % 360
+                val segment = floor(normalizedRotation / (360f / prizes.size)).toInt()
+                val prizeIndex = (prizes.size - segment + 5) % prizes.size
+
+                currentPrize = prizes[prizeIndex]
+                currentPointingPrize = currentPrize
+                isSpinning = false
+
+                try {
+                    // victorySound.start()
+                } catch (e: Exception) {
+                    Log.e("SpinWheel", "Error playing victory sound", e)
+                }
+
+                if (vibrator?.hasVibrator() == true) {
+                    vibrator.vibrate(
+                        VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE)
+                    )
+                }
+
+                delay(500)
+                showPrizeDialog = true
+                isConfettiVisible = true
+
+                delay(3000)
+                isConfettiVisible = false
+            }
+        }
+    }
+
     CompositionLocalProvider(
         LocalContext provides LocalContext.current.createConfigurationContext(
             Configuration().apply { setLocale(currentLocale) }
         )
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFF1E3C8A),
-                            Color(0xFF3871E0),
-                            Color(0xFF0C1B45)
-                        )
-                    )
-                )
-        ) {
-            RadialRaysBackground()
-            TopGameBar(
-                playerStats = playerStats,
-                onOpenStore = onOpenStore,
-                onOpenProfile = onOpenProfile,
-                showDriver = true,
-                onBackClicked = {
-                    navController.popBackStack()
-                },
-                fontFamily = FontFamily(Font(R.font.arbic_font_bold_2)),
-            )
-
-            // Wheel
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.Center),
-                contentAlignment = Alignment.Center
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFF1E3C8A),
+                                Color(0xFF3871E0),
+                                Color(0xFF0C1B45)
+                            )
+                        )
+                    )
             ) {
-                // Wheel Background with animated lights
-                EnhancedWheelBackground(
-                    modifier = Modifier
-                        .size(340.dp)
-                        .align(Alignment.Center),
-                    isSpinning = isSpinning,
-                    bulbColors = bulbColors
-                )
-
-                // Spinning Wheel
-                WheelContent(
-                    modifier = Modifier
-                        .size(300.dp)
-                        .rotate(rotation.value),
-                    segments = prizes.size,
-                    prizes = prizes,
-                    isSpinning = isSpinning
-                )
-
-                // Center Button with result
-                CenterSpinButton3D(
-                    modifier = Modifier
-                        .size(90.dp)
-                        .align(Alignment.Center)
-                        .scale(if (isSpinning) 0.9f else 1f),
-                    isSpinning = isSpinning,
-                    currentPrize = currentPrize
-                )
-
-                WheelPointer(
-                    modifier = Modifier
-                        .width(150.dp)
-                        .height(200.dp)
-                        .align(Alignment.TopCenter)
-                        .offset(y = (-120).dp),
-                    isSpinning = isSpinning,
-                    imageRes = R.drawable.indictor,
-                    currentPrize = currentPointingPrize ?: prizes[0]
-                )
-            }
-
-            // Bottom Spin Button
-
-            if (!isSpined){
-                Button3D(
-                    modifier = Modifier
-                        .padding(bottom = 100.dp)
-                        .align(Alignment.BottomCenter)
-                        .width(200.dp)
-                        .height(50.dp),
-                    onClick = {
-                        isSpined =true
-                        if (!isSpinning) {
-                            isSpinning = true
-                            showPrizeDialog = false
-                            currentPrize = null
-                            scope.launch {
-                                try {
-                                    //  wheelSpinSound.start()
-                                } catch (e: Exception) {
-                                    // Handle potential media player errors
-                                }
-                            }
-
-                            val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
-                            if (vibrator?.hasVibrator() == true) {
-                                vibrator.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE))
-                            }
-
-                            val spinCount = (5..8).random()
-                            val extraAngle = (0..359).random().toFloat()
-                            targetRotation = rotation.value + (spinCount * 360f) + extraAngle
-                            scope.launch {
-                                rotation.animateTo(
-                                    targetValue = targetRotation,
-                                    animationSpec = tween(
-                                        durationMillis = 7000,
-                                        easing = CubicBezierEasing(0.35f, 0.0f, 0.25f, 1.0f)
-                                    )
-                                )
-
-                                val normalizedRotation = (rotation.value % 360 + 360) % 360
-                                val segment = floor(normalizedRotation / (360f / prizes.size)).toInt()
-                                val prizeIndex = (prizes.size - segment - 1) % prizes.size
-
-                                currentPrize = prizes[prizeIndex ]
-                                currentPointingPrize = currentPrize
-                                isSpinning = false
-
-                                // Play victory sound and vibrate
-                                try {
-                                    // victorySound.start()
-                                } catch (e: Exception) {
-                                    // Handle potential media player errors
-                                }
-
-                                val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
-                                if (vibrator?.hasVibrator() == true) {
-                                    vibrator.vibrate(VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE))
-                                }
-
-                                delay(500) // Small delay before showing prize
-                                showPrizeDialog = true
-                                isConfettiVisible = true
-
-                                delay(3000) // Hide confetti after 3 seconds
-                                isConfettiVisible = false
-                            }
-                        }
+                RadialRaysBackground()
+                TopGameBar(
+                    player = Player,
+                    onOpenStore = onOpenStore,
+                    onOpenProfile = onOpenProfile,
+                    showDriver = true,
+                    onBackClicked = {
+                        navController.popBackStack()
                     },
-                    text = stringResource(R.string.spin_button),
-                    backgroundColor=Color(0xFF2ED15F),
-                    shadowColor= Color(0xFF13833A),
+                    fontFamily = FontFamily.Default,
                 )
-            }else if (isSpinning){
-                Spacer(
-                    Modifier.height(22.dp)
-                )
-            }else{
-                YellowButtonWithIcon(
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.Center),
+                    contentAlignment = Alignment.Center
+                ) {
+                    EnhancedWheelBackground(
+                        modifier = Modifier
+                            .size(340.dp)
+                            .align(Alignment.Center),
+                        isSpinning = isSpinning,
+                        bulbColors = bulbColors
+                    )
+
+                    WheelContent(
+                        modifier = Modifier
+                            .size(300.dp)
+                            .rotate(rotation.value),
+                        segments = prizes.size,
+                        prizes = prizes,
+                        isSpinning = isSpinning
+                    )
+
+                    CenterSpinButton3D(
+                        modifier = Modifier
+                            .size(90.dp)
+                            .align(Alignment.Center)
+                            .scale(if (isSpinning) 0.9f else 1f),
+                        isSpinning = isSpinning,
+                        currentPrize = currentPrize
+                    )
+
+                    WheelPointer(
+                        modifier = Modifier
+                            .width(150.dp)
+                            .height(200.dp)
+                            .align(Alignment.TopCenter)
+                            .offset(y = (-120).dp),
+                        isSpinning = isSpinning,
+                        imageRes = R.drawable.indictor,
+                        currentPrize = currentPointingPrize ?: prizes[0]
+                    )
+                }
+
+                Column(
                     modifier = Modifier
                         .padding(bottom = 100.dp)
                         .align(Alignment.BottomCenter),
-                    width = 200.dp,
-                    height = 50.dp,
-                    onClick = { /* your action */ },
-                    content = {
-                        Row (
-                            horizontalArrangement = Arrangement.SpaceAround,
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-
-                        ){
-                            Image(
-                                painterResource(R.drawable.video_ic),
-                                contentDescription = stringResource(R.string.video_icon_desc),
-                            )
-                            Text(
-                                text = stringResource(R.string.watch_video),
-                                fontSize = 18.sp,
-                                fontFamily = FontFamily(Font(R.font.arbic_font_bold_2)),
-                                color = Color(0xFF5F4B00)
-                            )
-                        }
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    if (!canSpin && timeRemaining > 0) {
+                        Text(
+                            text = formatTimeRemaining(timeRemaining),
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Default,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
                     }
 
-                )
-            }
-            if (isConfettiVisible) {
-                ConfettiAnimation(
-                    modifier = Modifier.fillMaxSize()
-                )
+                    if (canSpin && !isSpinning) {
+                        Button3D(
+                            modifier = Modifier
+                                .width(200.dp)
+                                .height(50.dp),
+                            onClick = { spinWheel() },
+                            text = stringResource(R.string.spin_button),
+                            backgroundColor = Color(0xFF2ED15F),
+                            shadowColor = Color(0xFF13833A),
+                        )
+                    }
+                    else if (isSpinning) {
+                        Spacer(Modifier.height(22.dp))
+                    }
+                    else {
+                        YellowButtonWithIcon(
+                            modifier = Modifier,
+                            width = 200.dp,
+                            height = 50.dp,
+                            onClick = {
+                                if (!isLoadingAd) {
+                                    isLoadingAd = true
+                                    adMobManager.showVideoAd(
+                                        activity = navController.context as Activity,
+                                        preferInterstitial = true,
+                                        rewardListener = object : AdMobManager.RewardedAdListener {
+                                            override fun onUserEarnedReward(amount: Int, type: String) {
+                                                Log.d("AdMob", "User earned reward: $amount $type")
+
+                                                preferencesManager.addCoins(amount)
+
+                                                Toast.makeText(
+                                                    context,
+                                                    "You earned $amount $type!",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+
+                                                canSpin = true
+                                                preferencesManager.resetLastSpinTime()
+                                                timeRemaining = 0L
+                                                isLoadingAd = false
+                                            }
+
+                                            override fun onAdClosed() {
+                                                Log.d("AdMob", "Ad closed")
+                                                isLoadingAd = false
+                                                canSpin = preferencesManager.isSpinAllowed()
+                                            }
+
+                                            override fun onAdFailedToShow(error: String) {
+                                                Log.e("AdMob", "Ad failed to show: $error")
+                                                Toast.makeText(
+                                                    context,
+                                                    "Failed to show ad: $error",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                                isLoadingAd = false
+                                            }
+                                        }
+                                    )
+                                }
+                            },
+                            content = {
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceAround,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    if (isLoadingAd) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            color = Color(0xFF5F4B00),
+                                            strokeWidth = 2.dp
+                                        )
+                                    } else {
+                                        Image(
+                                            painterResource(R.drawable.video_ic),
+                                            contentDescription = stringResource(R.string.video_icon_desc),
+                                        )
+                                    }
+
+                                    Text(
+                                        text = if (isLoadingAd)
+                                            stringResource(R.string.loading_ad)
+                                        else
+                                            stringResource(R.string.watch_video),
+                                        fontSize = 18.sp,
+                                        fontFamily = FontFamily(Font(R.font.arbic_font_bold_2)),
+                                        color = Color(0xFF5F4B00)
+                                    )
+                                }
+                            }
+                        )
+                    }
+                }
+
+                if (isConfettiVisible) {
+                    ConfettiAnimation(
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
         }
     }
@@ -635,7 +726,8 @@ fun EnhancedWheelBackground(
                 val x = centerX + (radius * cos(angle)).toFloat()
                 val y = centerY + (radius * sin(angle)).toFloat()
 
-                val bulbIndex = (i + floor((lightAnimatorValue * bulbColors.size).toDouble()).toDouble()) % bulbColors.size
+                val bulbIndex =
+                    (i + floor((lightAnimatorValue * bulbColors.size).toDouble()).toDouble()) % bulbColors.size
                 val baseColor = bulbColors[bulbIndex.toInt()]
 
                 val brightness = if (isRandomPattern) {
@@ -654,9 +746,11 @@ fun EnhancedWheelBackground(
                         brightnessPhase == floor(normalizedAnimValue.toDouble()).toInt() -> {
                             lerp(0.3f, 1f, (normalizedAnimValue % 1f))
                         }
+
                         (brightnessPhase + 1) % 4 == floor(normalizedAnimValue.toDouble()).toInt() -> {
                             lerp(1f, 0.3f, (normalizedAnimValue % 1f))
                         }
+
                         else -> 0.3f
                     }
                 }
@@ -691,7 +785,8 @@ fun EnhancedWheelBackground(
                     val starSize = 14f * bulbRadiusMultiplier
                     val starPoints = 4
                     for (j in 0 until starPoints) {
-                        val starAngle = j * (2 * Math.PI / starPoints) + (lightAnimatorValue * Math.PI / 2)
+                        val starAngle =
+                            j * (2 * Math.PI / starPoints) + (lightAnimatorValue * Math.PI / 2)
                         val starX = x + (starSize * cos(starAngle)).toFloat()
                         val starY = y + (starSize * sin(starAngle)).toFloat()
                         drawLine(
@@ -784,8 +879,8 @@ fun ConfettiAnimation(modifier: Modifier) {
                 // Draw a rectangle for the confetti
                 drawRect(
                     color = particle.color,
-                    topLeft = Offset(-particle.size/2, -particle.size/2),
-                    size = Size(particle.size, particle.size/2)
+                    topLeft = Offset(-particle.size / 2, -particle.size / 2),
+                    size = Size(particle.size, particle.size / 2)
                 )
             }
         }
@@ -823,6 +918,7 @@ fun getPrizesList(): List<WheelPrize> {
         WheelPrize(R.drawable.coin5, "50", stringResource(R.string.coin_50)),
     )
 }
+
 @Composable
 fun WheelContent(
     modifier: Modifier = Modifier,
@@ -986,7 +1082,10 @@ fun WheelContent(
                 drawArc(
                     brush = Brush.linearGradient(
                         colors = shimmerColors,
-                        start = Offset(shimmerTranslate.value - 1000f, shimmerTranslate.value - 1000f),
+                        start = Offset(
+                            shimmerTranslate.value - 1000f,
+                            shimmerTranslate.value - 1000f
+                        ),
                         end = Offset(shimmerTranslate.value, shimmerTranslate.value)
                     ),
                     startAngle = startAngle,
@@ -1148,6 +1247,18 @@ fun WheelContent(
     }
 }
 
+@Composable
+fun formatTimeRemaining(timeInMillis: Long): String {
+    val hours = timeInMillis / (1000 * 60 * 60)
+    val minutes = (timeInMillis % (1000 * 60 * 60)) / (1000 * 60)
+    val seconds = (timeInMillis % (1000 * 60)) / 1000
+
+    return if (hours > 0) {
+        String.format("%02d:%02d:%02d", hours, minutes, seconds)
+    } else {
+        String.format("%02d:%02d", minutes, seconds)
+    }
+}
 
 
 @Preview(showBackground = true)

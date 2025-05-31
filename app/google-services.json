@@ -28,7 +28,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:721639959382:android:4ca7c5129e75acc79644f7",
         "android_client_info": {
-          "package_name": "com.example.guessthewordsgame"
+          "package_name": "com.pyramid.questions"
         }
       },
       "oauth_client": [],

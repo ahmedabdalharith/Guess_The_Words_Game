@@ -221,7 +221,7 @@
         <!-- Wheel Screen Strings -->
         <string name="spin_button">Spin</string>
         <string name="watch_video">Watch Video</string>
-        <string name="delete_two_letters">Delete Two Letters</string>
+        <string name="delete_two_letters"> </string>
         <string name="hint">Hint</string>
         <string name="coin_single">🪙</string>
         <string name="heart">❤️</string>
@@ -364,4 +364,64 @@
         <string name="vip">VIP</string>
         <string name="ads">ADS</string>
         <string name="default_web_client_id" />
+
+        <!-- Username Dialog Strings -->
+        <string name="choose_name">Choose Name</string>
+        <string name="choose_name_description">Choose the name you want other players to see</string>
+        <string name="enter_name_placeholder">Enter name</string>
+        <string name="name_change_note">You can change the name later*</string>
+        <string name="refresh_content_description">Refresh</string>
+        <string name="close_content_description">Close</string>
+
+
+        <string name="change_name">Do you want to change the name?</string>
+
+        <string name="name_changed_successfully">Username changed successfully</string>
+
+        <!-- Level Unlock Dialog Strings -->
+        <string name="level_unlock_title">Unlock Level</string>
+        <string name="level_unlock_subtitle">To unlock this level</string>
+        <string name="unlock_button">Unlock Now\n %1$d🪙</string>
+
+        <!-- Content Descriptions -->
+        <string name="content_description_unlock_icon">Unlock icon</string>
+        <string name="content_description_stars">Stars</string>
+        <string name="not_enough_coins"> Not Enough Coins</string>
+
+        <!-- Out of Lives Dialog -->
+        <string name="out_of_lives_title">Out of Lives</string>
+        <string name="next_life_time">Time for next life:</string>
+        <string name="add_life_continue">Add a life to continue playing</string>
+        <string name="refill">Refill</string>
+        <string name="get_one_life">Get One Life</string>
+        <string name="become_vip">Become VIP</string>
+        <string name="unlock_special_levels">Unlock special\nlevels!</string>
+
+        <!-- Content descriptions -->
+        <string name="empty_heart_desc">Empty Heart</string>
+        <string name="heart_icon_desc">Heart Icon</string>
+        <string name="vip_background_desc">VIP Background</string>
+        <string name="open_next_level" >Open Next Level</string>
+
+
+        <string name="welcome_back">Welcome Back!</string>
+        <string name="login_subtitle">Sign in to continue your journey</string>
+        <string name="email">Email</string>
+        <string name="password">Password</string>
+        <string name="login">Login</string>
+        <string name="forgot_password">Forgot Password?</string>
+        <string name="dont_have_account">Don\'t have an account?</string>
+        <string name="register_now">Register Now</string>
+        <string name="continue_as_guest">Continue as Guest</string>
+        <string name="app_logo">App Logo</string>
+        <string name="please_fill_all_fields">Please fill all fields</string>
+        <string name="invalid_email_format">Invalid email format</string>
+        <string name="user_not_found">User not found</string>
+        <string name="invalid_password">Invalid password</string>
+        <string name="login_failed">Login failed. Please try again.</string>
+        <string name="password_reset_sent">Password reset email sent</string>
+        <string name="enter_email_for_reset">Enter your email to reset password</string>
+        <string name="loading_ad">Loading ad...</string>
+        <string name="question_image_desc">Question Image</string>
+
 </resources>

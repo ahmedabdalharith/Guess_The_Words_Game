@@ -1,6 +1,9 @@
 package com.pyramid.questions.presentation.store
 
+import android.app.Activity
+import android.content.Intent
 import android.content.res.Configuration
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -22,7 +25,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -41,13 +48,17 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.pyramid.questions.AppColors
 import com.pyramid.questions.R
 import com.pyramid.questions.data.local.GamePreferencesManager
+import com.pyramid.questions.data.remote.AdMobManager
+import com.pyramid.questions.data.remote.rememberAdMobManager
 import com.pyramid.questions.presentation.components.CustomButton
 import com.pyramid.questions.presentation.components.TopGameBar
 import java.util.Locale
@@ -59,127 +70,195 @@ fun GameStoreScreen(
     val scrollState = rememberScrollState()
     val preferencesManager = remember { GamePreferencesManager(navController.context) }
     val currentLocale = remember { Locale(preferencesManager.getLanguage()) }
-    val arabicFont = FontFamily(Font(if (currentLocale == Locale("ar")) {
-        R.font.arbic_font_bold_2
-    } else {
-        R.font.en_font
-    }))
-    val playerStats =preferencesManager.getPlayerStats()
+    val arabicFont = FontFamily(
+        Font(
+            if (currentLocale == Locale("ar")) {
+                R.font.arbic_font_bold_2
+            } else {
+                R.font.eng3
+            }
+        )
+    )
+    val context = LocalContext.current
+
+    var Player by remember { mutableStateOf(preferencesManager.getPlayer()) }
+    val adMobManager = rememberAdMobManager()
+
+    val updateCoins = { amount: Int ->
+        preferencesManager.addCoins(amount)
+        Player = preferencesManager.getPlayer()
+    }
+
     CompositionLocalProvider(
         LocalContext provides LocalContext.current.createConfigurationContext(
             Configuration().apply { setLocale(currentLocale) }
         )
     ) {
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        AppColors.BackgroundStart,
-                        AppColors.BackgroundEnd
-                    )
-                )
-            )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            // Top Bar with back button and currency
-            TopGameBar(
-                playerStats = playerStats,
-                onOpenStore = { /* Already in store */ },
-                onOpenProfile = { /* Handle open profile */ },
-                showDriver = false,
-                showButtonAdd = false,
-                onBackClicked = {
-                    navController.popBackStack()
-                },
-                fontFamily = arabicFont,
-            )
-
-            // Scrollable content
-            Column(
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .verticalScroll(scrollState),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                AppColors.BackgroundStart,
+                                AppColors.BackgroundEnd
+                            )
+                        )
+                    )
             ) {
-                // Premium and Remove Ads section
-                Row(
-                    modifier = Modifier.fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
                 ) {
-                    // VIP Premium button
-                    PremiumVipButton(
-                        onClick = { /* Handle premium upgrade */ },
-                        modifier = Modifier.weight(1f)
+                    TopGameBar(
+                        player = Player,
+                        onOpenStore = { },
+                        onOpenProfile = { },
+                        showDriver = false,
+                        showButtonAdd = false,
+                        onBackClicked = {
+                            navController.popBackStack()
+                        },
+                        fontFamily = arabicFont,
                     )
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .verticalScroll(scrollState),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            PremiumVipButton(
+                                onClick = { },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+
+                        SectionTitle(
+                            title = stringResource(R.string.free_coins),
+                            fontFamily = arabicFont
+                        )
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+
+                        ) {
+                            FreeCoinsOption(
+                                coinAmount = 50,
+                                action = stringResource(R.string.watch_video),
+                                icon = R.drawable.video_ic,
+                                onClick = {
+                                    adMobManager.showVideoAd(
+                                        activity = navController.context as Activity,
+                                        preferInterstitial = false,
+                                        rewardListener = object : AdMobManager.RewardedAdListener {
+                                            override fun onUserEarnedReward(amount: Int, type: String) {
+                                                updateCoins(50)
+                                                Toast.makeText(
+                                                    context,
+                                                    "You earned 50 coins!",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+
+                                            override fun onAdClosed() {
+                                            }
+
+                                            override fun onAdFailedToShow(error: String) {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Failed to show ad: $error",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        }
+                                    )
+                                },
+                            )
+
+                            FreeCoinsOption(
+                                coinAmount = 200,
+                                action = stringResource(R.string.share),
+                                icon = R.drawable.whatsapp_icon,
+                                onClick = {
+                                    val shareText = "تطبيق أسئلة الهرم - اختبر معلوماتك واستمتع بالألعاب التعليمية!\n\nحمل التطبيق الآن:\nhttps://play.google.com/store/apps/details?id=com.pyramid.questions"
+
+                                    val intent = Intent(Intent.ACTION_SEND).apply {
+                                        type = "text/plain"
+                                        putExtra(Intent.EXTRA_TEXT, shareText)
+                                        setPackage("com.whatsapp")
+                                    }
+
+                                    if (intent.resolveActivity(context.packageManager) != null) {
+                                        context.startActivity(intent)
+                                    } else {
+                                        val webIntent = Intent(Intent.ACTION_SEND).apply {
+                                            type = "text/plain"
+                                            putExtra(Intent.EXTRA_TEXT, shareText)
+                                        }
+                                        val chooser = Intent.createChooser(webIntent, "مشاركة التطبيق")
+                                        context.startActivity(chooser)
+                                    }
+                                },
+                                isWhatsapp = true,
+                            )
+
+                            FreeCoinsOption(
+                                coinAmount = 100,
+                                action = stringResource(R.string.like),
+                                icon = R.drawable.facebook_icon,
+                                onClick = {
+                                    val url = "https://www.facebook.com/PyramidQuestions"
+                                    val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+                                    context.startActivity(intent)
+                                    updateCoins(100)
+                                    Toast.makeText(
+                                        context,
+                                        "تم منحك 100 عملة!",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                },
+                                isFacebook = true,
+                            )
+
+                            FreeCoinsOption(
+                                coinAmount = 100,
+                                action = stringResource(R.string.follow),
+                                icon = R.drawable.instagram_icon,
+                                onClick = {
+                                    val url = "https://www.instagram.com/pyramid_questions/"
+                                    val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+                                    context.startActivity(intent)
+                                    updateCoins(100)
+                                    Toast.makeText(
+                                        context,
+                                        "تم منحك 100 عملة!",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                },
+                                isInstagram = true,
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(80.dp))
+                    }
                 }
-
-                // "Free Coins" section title
-                SectionTitle(
-                    title = stringResource(R.string.free_coins),
-                    fontFamily = arabicFont
-                )
-
-                Column (
-                    modifier = Modifier.fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-
-                ){
-                    // Free coins options
-                    FreeCoinsOption(
-                        coinAmount = 50,
-                        action = stringResource(R.string.watch_video),
-                        icon = R.drawable.video_ic,
-                        onClick = { /* Handle watch video */ },
-                    )
-
-                    FreeCoinsOption(
-                        coinAmount = 200,
-                        action = stringResource(R.string.share),
-                        icon = R.drawable.whatsapp_icon,
-                        onClick = { /* Handle share */ },
-                        isWhatsapp = true,
-                    )
-
-                    FreeCoinsOption(
-                        coinAmount = 100,
-                        action = stringResource(R.string.like),
-                        icon = R.drawable.facebook_icon,
-                        onClick = { /* Handle like */ },
-                        isFacebook = true,
-                    )
-
-                    FreeCoinsOption(
-                        coinAmount = 100,
-                        action = stringResource(R.string.follow),
-                        icon = R.drawable.instagram_icon,
-                        onClick = { /* Handle follow */ },
-                        isInstagram = true,
-                    )
-                    FreeCoinsOption(
-                        coinAmount = 100,
-                        action = stringResource(R.string.follow),
-                        icon = R.drawable.google_icon,
-                        onClick = { /* Handle follow */ },
-                        isGoogle = true,
-                    )
-
-                }
-                // Add some space at the bottom
-                Spacer(modifier = Modifier.height(80.dp))
             }
         }
     }
-}}
+}
 
 @Composable
 fun PremiumVipButton(
@@ -204,7 +283,6 @@ fun PremiumVipButton(
                 .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // VIP Icon
             Box(
                 modifier = Modifier
                     .size(48.dp)
@@ -229,19 +307,17 @@ fun PremiumVipButton(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // VIP Text
             Text(
                 text = stringResource(R.string.vip_membership),
                 color = Color(0xFF333333),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily(Font(R.font.arbic_font_bold_2)),
+                fontFamily = FontFamily.Default,
                 textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Join Button
             CustomButton(
                 onClick = onClick,
                 backgroundColor = Color(0xFF4CAF50),
@@ -251,7 +327,7 @@ fun PremiumVipButton(
                         color = Color.White,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily(Font(R.font.arbic_font_bold_2))
+                        fontFamily = FontFamily.Default
                     )
                 },
                 modifier = Modifier
@@ -300,7 +376,7 @@ fun FreeCoinsOption(
     isWhatsapp: Boolean = false,
     isFacebook: Boolean = false,
     isInstagram: Boolean = false,
-    isGoogle : Boolean = false,
+    isGoogle: Boolean = false,
 
     ) {
     val buttonColor = when {
@@ -308,7 +384,7 @@ fun FreeCoinsOption(
         isFacebook -> Color(0xFF1976D2)
         isInstagram -> Color(0xFFC13584)
         isGoogle -> Color(0xFF4285F4)
-        else -> Color(0xFFFFB300) // Default for video
+        else -> Color(0xFFFFB300)
     }
     CustomButton(
         modifier = Modifier
@@ -339,10 +415,9 @@ fun FreeCoinsOption(
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f),
-                    fontFamily = FontFamily(Font(R.font.arbic_font_bold_2))
+                    fontFamily = FontFamily.Default
                 )
 
-                // Action button
                 CustomButton(
                     onClick = onClick,
                     backgroundColor = buttonColor,
@@ -360,7 +435,9 @@ fun FreeCoinsOption(
                                 modifier = Modifier.padding(start = 8.dp)
                             )
 
-                            Spacer(modifier = Modifier.width(8.dp).weight(1f))
+                            Spacer(modifier = Modifier
+                                .width(8.dp)
+                                .weight(1f))
 
                             Image(
                                 painter = painterResource(id = icon),

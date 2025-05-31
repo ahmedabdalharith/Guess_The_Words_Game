@@ -25,10 +25,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +43,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
@@ -48,6 +51,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -57,10 +61,12 @@ import com.pyramid.questions.AppColors.GoldColor
 import com.pyramid.questions.AppColors.SpecialTextColor
 import com.pyramid.questions.R
 import com.pyramid.questions.core.Constants.GameModeTab
-import com.pyramid.questions.core.Constants.WordCategory
+import com.pyramid.questions.data.local.GameCategory
+import com.pyramid.questions.data.local.GameCategoryType
 import com.pyramid.questions.data.local.GamePreferencesManager
-import com.pyramid.questions.data.remote.AdMobManager
-import com.pyramid.questions.domain.model.LevelData
+import com.pyramid.questions.data.local.GameRepository
+import com.pyramid.questions.data.local.GameRoomDatabase
+import com.pyramid.questions.data.local.HomeViewModel
 import com.pyramid.questions.navigation.Route
 import com.pyramid.questions.presentation.components.DailyRewardDialog
 import com.pyramid.questions.presentation.components.GameProgressBarSpacial
@@ -72,18 +78,33 @@ import com.pyramid.questions.presentation.levels.Divider3D
 import com.pyramid.questions.presentation.test.ComposableBox3D
 import com.pyramid.questions.presentation.test.EnhancedImageBox3D
 import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 @Composable
 fun HomeScreen(
-    onStartGame: (levelId: Int, category: WordCategory) -> Unit = { _, _ -> },
+    onStartGame: (levelId: Int, category: GameCategoryType) -> Unit = { _, _ -> },
     onOpenStore: () -> Unit = {},
-    onOpenDailyChallenge: () -> Unit = {},
-    onOpenProfile: () -> Unit = {},
     navController: NavHostController,
-    adMobManager : AdMobManager = AdMobManager(navController.context),
 ) {
+    val database = remember { GameRoomDatabase.getDatabase(navController.context) }
+    val repository = remember { GameRepository(database) }
     val preferencesManager = remember { GamePreferencesManager(navController.context) }
+
+    val viewModel: HomeViewModel = remember {
+        HomeViewModel(repository, preferencesManager)
+    }
+    val uiState by viewModel.uiState.collectAsState()
+    LaunchedEffect(Unit) {
+        viewModel.refresh()
+    }
+    var coins by remember { mutableIntStateOf(preferencesManager.getPlayer().coins) }
+    val usernameId = if (preferencesManager.getUsernameId() == null) {
+        preferencesManager.setUsernameId("user_${System.currentTimeMillis()}").toString()
+    } else {
+        preferencesManager.getUsernameId()
+    }
     val currentLocale = remember { Locale(preferencesManager.getLanguage()) }
     val context = LocalContext.current
     var showSettingsDialog by remember { mutableStateOf(false) }
@@ -91,28 +112,38 @@ fun HomeScreen(
     var showUsernameDialog by remember { mutableStateOf(false) }
     var showDailyReward by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(GameModeTab.NORMAL) }
-    var coins by remember { mutableIntStateOf(0) }
-    val arabicFont = FontFamily(Font(if (currentLocale == Locale("ar")) {
-        R.font.arbic_font_bold_2
-    } else {
-        R.font.fon2
-    }))
-    val playerStats = preferencesManager.getPlayerStats()
-    CompositionLocalProvider(
-            LocalContext provides LocalContext.current.createConfigurationContext(
-                Configuration().apply { setLocale(currentLocale) }
-            )
-        ) {
-
-
-           if (showDailyReward) {
-                        DailyRewardDialog(onClose = { showDailyReward = false })
-                    }
-                        LaunchedEffect(Unit) {
-                delay(1500)
-                showDailyReward = true
+    val arabicFont = FontFamily(
+        Font(
+            if (currentLocale == Locale("ar")) {
+                R.font.arbic_font_bold_2
+            } else {
+                R.font.eng3
             }
-
+        )
+    )
+    val player = preferencesManager.getPlayer()
+    CompositionLocalProvider(
+        LocalContext provides LocalContext.current.createConfigurationContext(
+            Configuration().apply { setLocale(currentLocale) }
+        )
+    ) {
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+            LaunchedEffect(Unit) {
+                delay(1500)
+                if (shouldShowDailyReward(preferencesManager)) {
+                    showDailyReward = true
+                }
+            }
+            if (showDailyReward) {
+                DailyRewardDialog(
+                    currentDay = 1,
+                    onCollectReward = { reward ->
+                        claimDailyReward(preferencesManager)
+                        coins = preferencesManager.getPlayer().coins
+                    },
+                    onClose = { showDailyReward = false }
+                )
+            }
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -127,7 +158,7 @@ fun HomeScreen(
             ) {
                 Column {
                     TopHomeBar(
-                        playerStats = playerStats,
+                        player = player,
                         onOpenStore = onOpenStore,
                         onOpenSettings = { showSettingsDialog = true },
                         fontFamily = arabicFont,
@@ -135,7 +166,6 @@ fun HomeScreen(
                         onVideoClick = { showWhichAdvDialog = true },
                         onWorldClick = { showUsernameDialog = true },
                     )
-
 
                     Divider3D()
 
@@ -149,19 +179,23 @@ fun HomeScreen(
                             SettingsDialog(
                                 onCloseClick = { showSettingsDialog = false },
                                 onSelectLanguageClick = {
-//                                    preferencesManager.setLanguage(
-//                                        if (currentLocale == Locale("ar")) "en" else "ar"
-//                                    )
                                     navController.navigate(Route.HOME) {
                                         popUpTo(Route.HOME) { inclusive = true }
                                     }
-                                },)
+                                },
+                            )
                         }
                         if (showUsernameDialog) {
-                            UsernameGloableDialog(
-                                onCloseClick = { showUsernameDialog = false },
-                                onClickYes = { navController.navigate(Route.PLAYERS) }
-                            )
+                            if (preferencesManager.getUsername().toString().isEmpty()) {
+                                UsernameGloableDialog(
+                                    onCloseClick = { showUsernameDialog = false },
+                                    onClickYes = { navController.navigate(Route.PLAYERS) }
+                                )
+                            } else {
+                                navController.navigate(Route.PLAYERS) {
+                                    popUpTo(Route.HOME) { inclusive = true }
+                                }
+                            }
                         }
 
                         if (showWhichAdvDialog) {
@@ -169,10 +203,12 @@ fun HomeScreen(
                                 onClose = { showWhichAdvDialog = false },
                                 onRewardEarned = { earnedCoins ->
                                     coins += earnedCoins
-                                    // Save coins to your game state/database
-                                    Log.d("Game", context.getString(R.string.coins_earned, earnedCoins))
+                                    Log.d(
+                                        "Game",
+                                        context.getString(R.string.coins_earned, earnedCoins)
+                                    )
                                 },
-                                adMobManager = adMobManager
+                                navController = navController
                             )
                         }
                         Spacer(modifier = Modifier.height(12.dp))
@@ -182,27 +218,34 @@ fun HomeScreen(
                             onTabSelected = { selectedTab = it },
                             fontFamily = arabicFont
                         )
-
                         Spacer(modifier = Modifier.height(12.dp))
-
                         when (selectedTab) {
                             GameModeTab.NORMAL -> NormalLevelsList(
-                                onLevelSelected = { levelData ->
-                                    onStartGame(levelData.levelNumber, levelData.category)
+                                onLevelSelected = { gameCategory ->
+                                    onStartGame(gameCategory.id, gameCategory.category)
                                 },
-                                fontFamily = arabicFont
+                                fontFamily = arabicFont,
+                                userId = usernameId.toString(),
+                                viewModel = viewModel,
+                                isLoading = uiState.isLoading
                             )
+
                             GameModeTab.PREMIUM -> PremiumLevelsList(
-                                onLevelSelected = { levelData ->
-                                    onStartGame(levelData.levelNumber, levelData.category)
+                                viewModel = viewModel,
+                                onLevelSelected = { gameCategory ->
+                                    onStartGame(gameCategory.id, gameCategory.category)
                                 },
-                                fontFamily = arabicFont
+                                fontFamily = arabicFont,
+                                isLoading = uiState.isLoading
                             )
+
                             GameModeTab.DAILY -> DailyLevelsList(
-                                onLevelSelected = { levelData ->
-                                    onStartGame(levelData.levelNumber, levelData.category)
+                                viewModel = viewModel,
+                                onLevelSelected = { gameCategory ->
+                                    onStartGame(gameCategory.id, gameCategory.category)
                                 },
-                                fontFamily = arabicFont
+                                fontFamily = arabicFont,
+                                isLoading = uiState.isLoading
                             )
                         }
                     }
@@ -211,189 +254,63 @@ fun HomeScreen(
             }
         }
     }
+}
 
 @Composable
 fun NormalLevelsList(
-    onLevelSelected: (LevelData) -> Unit,
-    fontFamily: FontFamily
+    onLevelSelected: (GameCategory) -> Unit,
+    fontFamily: FontFamily,
+    userId: String,
+    viewModel: HomeViewModel,
+    isLoading: Boolean
 ) {
-    LocalContext.current
-    val levels = listOf(
-        LevelData(
-            levelNumber = 1,
-            imageResId = R.drawable.img1,
-            progress = stringResource(R.string.progress_6_18),
-            isUnlocked = true,
-            category = WordCategory.COUNTRIES,
-            difficulty = 1,
-            hasGift = true
-        ),
-        LevelData(
-            levelNumber = 2,
-            imageResId = R.drawable.img2,
-            starsRequired = 10,
-            coinsRequired = 100,
-            category = WordCategory.TECH
-        ),
-        LevelData(
-            levelNumber = 0,
-            imageResId = R.drawable.img3,
-            progress = stringResource(R.string.level_range),
-            isSpecial = true,
-            specialTitle = stringResource(R.string.special_level_title),
-            specialSubtitle = stringResource(R.string.special_level_countries),
-            category = WordCategory.COUNTRIES,
-            isUnlocked = true,
-            difficulty = 3
-        ),
-        LevelData(
-            levelNumber = 3,
-            imageResId = R.drawable.img4,
-            starsRequired = 22,
-            coinsRequired = 150,
-            category = WordCategory.ANIMALS,
-            difficulty = 2
-        ),
-        LevelData(
-            levelNumber = 4,
-            imageResId = R.drawable.img1,
-            starsRequired = 34,
-            coinsRequired = 200,
-            category = WordCategory.COUNTRIES,
-            difficulty = 3
-        ),
-        LevelData(
-            levelNumber = 5,
-            imageResId = R.drawable.img2,
-            isUnlocked = true,
-            category = WordCategory.ANIMALS,
-            difficulty = 2,
-            progress = stringResource(R.string.progress_0_15),
-            newWordsCount = 5
-        ),
-        LevelData(
-            levelNumber = 0,
-            imageResId = R.drawable.img2,
-            isSpecial = true,
-            specialTitle = stringResource(R.string.special_level_title),
-            category = WordCategory.ANIMALS,
-            difficulty = 4,
-            starsRequired = 40,
-            coinsRequired = 300
-        )
-    )
-
     LevelSelectionList(
-        levels = levels,
+        gameCategorys = viewModel.getNormalCategories(),
         onLevelSelected = onLevelSelected,
-        fontFamily = fontFamily
+        fontFamily = fontFamily,
+        isLoading = isLoading
     )
 }
 
 @Composable
 fun PremiumLevelsList(
-    onLevelSelected: (LevelData) -> Unit,
-    fontFamily: FontFamily
+    onLevelSelected: (GameCategory) -> Unit,
+    fontFamily: FontFamily,
+    viewModel: HomeViewModel,
+    isLoading: Boolean,
 ) {
-    LocalContext.current
-    val levels = listOf(
-        LevelData(
-            levelNumber = 1,
-            imageResId = R.drawable.img3,
-            category = WordCategory.COUNTRIES,
-            difficulty = 3,
-            isUnlocked = true,
-            progress = stringResource(R.string.progress_2_10),
-            isSpecial = true,
-            specialTitle = stringResource(R.string.special_level_premium),
-            specialSubtitle = stringResource(R.string.special_level_premium_subtitle)
-        ),
-        LevelData(
-            levelNumber = 2,
-            imageResId = R.drawable.img4,
-            category = WordCategory.MUSIC,
-            starsRequired = 25,
-            coinsRequired = 250,
-            isSpecial = true,
-            specialTitle = stringResource(R.string.special_level_music),
-            difficulty = 4
-        ),
-        LevelData(
-            levelNumber = 3,
-            imageResId = R.drawable.img3,
-            category = WordCategory.FOOD,
-            difficulty = 3,
-            starsRequired = 30,
-            coinsRequired = 300,
-            isSpecial = true,
-            specialTitle = stringResource(R.string.special_level_food),
-            specialSubtitle = stringResource(R.string.special_level_food_subtitle)
-        )
-    )
-
     LevelSelectionList(
-        levels = levels,
+        gameCategorys = viewModel.getVipCategories(),
         onLevelSelected = onLevelSelected,
-        fontFamily = fontFamily
+        fontFamily = fontFamily,
+        isLoading = isLoading
     )
 }
 
 @Composable
 fun DailyLevelsList(
-    onLevelSelected: (LevelData) -> Unit,
-    fontFamily: FontFamily
+    onLevelSelected: (GameCategory) -> Unit,
+    fontFamily: FontFamily,
+    viewModel: HomeViewModel,
+    isLoading: Boolean
 ) {
-    val levels = listOf(
-        LevelData(
-            levelNumber = 0,
-            imageResId = R.drawable.img3,
-            isSpecial = true,
-            specialTitle = stringResource(R.string.today_challenge),
-            specialSubtitle = stringResource(R.string.date_may_14),
-            isUnlocked = true,
-            category = WordCategory.SPORTS,
-            difficulty = 3,
-            hasGift = true
-        ),
-        LevelData(
-            levelNumber = 0,
-            imageResId = R.drawable.img1,
-            isSpecial = true,
-            specialTitle = stringResource(R.string.yesterday_challenge),
-            specialSubtitle = stringResource(R.string.date_may_13),
-            isUnlocked = true,
-            category = WordCategory.TECH,
-            difficulty = 2,
-            progress = stringResource(R.string.progress_8_10)
-        ),
-        LevelData(
-            levelNumber = 0,
-            imageResId = R.drawable.img4,
-            isSpecial = true,
-            specialTitle = stringResource(R.string.tomorrow_challenge),
-            specialSubtitle = stringResource(R.string.date_may_15),
-            category = WordCategory.FOOD,
-            difficulty = 3,
-            coinsRequired = 100
-        )
-    )
-
     LevelSelectionList(
-        levels = levels,
+        gameCategorys = viewModel.getDailyCategories(),
         onLevelSelected = onLevelSelected,
-        fontFamily = fontFamily
+        fontFamily = fontFamily,
+        isLoading = isLoading
     )
 }
 
 @Composable
 fun LevelItem(
-    levelData: LevelData,
+    gameCategory: GameCategory,
     onClick: () -> Unit,
     fontFamily: FontFamily,
-    onLockCheck: () -> Unit = {}
+    onLockCheck: () -> Unit = {},
 ) {
-    LocalContext.current
-    val isSpecial = levelData.isSpecial
+
+    val isSpecial = gameCategory.isVipCategory || gameCategory.isDailyCategory
     val backgroundGradient = if (isSpecial) {
         Brush.horizontalGradient(
             colors = listOf(
@@ -409,12 +326,22 @@ fun LevelItem(
             )
         )
     }
+    val context = LocalContext.current
     val shadowColor = if (isSpecial) Color(0xFFA4825A) else Color(0xFF133478)
     var showUnlockDialog by remember { mutableStateOf(false) }
     val shadowEffectColor = if (isSpecial) Color(0xFFc3a275) else Color(0xFF5d7fb2)
+    val preferencesManager = remember { GamePreferencesManager(context) }
 
+    val viewModel = remember {
+        mutableStateOf(
+            HomeViewModel(
+                repository = GameRepository(GameRoomDatabase.getDatabase(context)),
+                preferencesManager = preferencesManager
+            )
+        )
+    }
     val handleClick = {
-        if (levelData.isUnlocked) {
+        if (gameCategory.isUnlocked) {
             onClick()
         } else {
             onLockCheck()
@@ -426,52 +353,73 @@ fun LevelItem(
         shadowBoxColor = shadowColor,
         modifier = Modifier
             .fillMaxWidth()
-            .height(120.dp)
+            .height(110.dp)
             .padding(vertical = 4.dp)
             .clickable { handleClick() },
         content = {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(8.dp),
+                    .padding(start = 8.dp, end = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                LevelItemImage(levelData)
+                EnhancedImageBox3D(
+                    image = gameCategory.iconResource,
+                    size = 80,
+                    isRtl = true,
+                )
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
                 ) {
-                    if (isSpecial) {
-                        SpecialLevelContent(levelData, fontFamily)
+                    if (gameCategory.isVipCategory) {
+                        SpecialLevelContent(gameCategory, fontFamily)
+                    } else if (!gameCategory.isDailyCategory) {
+                        NormalLevelContent(gameCategory, fontFamily)
                     } else {
-                        NormalLevelContent(levelData, fontFamily)
+                        SpecialLevelContent(gameCategory, fontFamily)
                     }
                 }
 
-                if (!levelData.isUnlocked) {
+                if (!gameCategory.isUnlocked) {
                     LockIcon(onClick = { showUnlockDialog = true })
                 } else {
                     Spacer(Modifier.width(22.dp))
                 }
-
                 if (showUnlockDialog) {
                     LevelUnlockDialog(
-                        title = stringResource(R.string.unlock_level_title),
-                        subtitle = stringResource(R.string.unlock_level_subtitle),
-                        starsRequired = levelData.starsRequired ?: 10,
-                        coinsCost = levelData.coinsRequired ?: 100,
-                        onUnlock = { },
+                        onUnlock = {
+                            viewModel.value.updateCategory(
+                                gameCategory.copy(
+                                    isUnlocked = true,
+                                    completedLevels = 0,
+                                    totalLevels = gameCategory.totalLevels,
+                                    requiredStars = 0,
+                                    requiredCoins = 0
+                                )
+                            )
+                            gameCategory.isUnlocked = true
+                            gameCategory.completedLevels = 0
+                            gameCategory.totalLevels = gameCategory.totalLevels
+                            gameCategory.requiredStars = 0
+                            gameCategory.requiredCoins = 0
+                            showUnlockDialog = false
+                        },
+                        coinsCost = gameCategory.requiredCoins,
                         onClose = { showUnlockDialog = false },
                     )
                 }
 
-                if (levelData.coinsRequired != null && levelData.coinsRequired > 0) {
+                if (!gameCategory.isUnlocked
+                    || gameCategory.category == GameCategoryType.YESTERDAY_CHALLENGE
+                    || gameCategory.category == GameCategoryType.DAY_CHALLENGE
+                ) {
                     RequirementBadgeCoins(
-                        coinsRequired = levelData.coinsRequired,
+                        coinsRequired = gameCategory.requiredCoins,
                         icon = R.drawable.coin1,
                         modifier = Modifier.offset(x = 12.dp, y = 0.dp),
-                        levelData = levelData
+                        levelData = gameCategory
                     )
                 } else {
                     Spacer(modifier = Modifier.width(12.dp))
@@ -479,7 +427,9 @@ fun LevelItem(
             }
         },
         containerGradient = backgroundGradient,
-        borderColor = if (isSpecial) SpecialTextColor.copy(alpha = 0.3f) else AppColors.SecondaryColor.copy(alpha = 0.2f)
+        borderColor = if (isSpecial) SpecialTextColor.copy(alpha = 0.3f) else AppColors.SecondaryColor.copy(
+            alpha = 0.2f
+        )
     )
 }
 
@@ -489,7 +439,7 @@ private fun RequirementBadgeCoins(
     icon: Int,
     coinsRequired: Int,
     onClick: () -> Unit = {},
-    levelData: LevelData
+    levelData: GameCategory
 ) {
     LocalContext.current
     Column(
@@ -497,7 +447,7 @@ private fun RequirementBadgeCoins(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        if (levelData.isSpecial) {
+        if (levelData.isVipCategory || levelData.category == GameCategoryType.TOMORROW_CHALLENGE) {
             CoinButton(
                 background = R.drawable.saved_gold,
                 text = stringResource(R.string.vip_text),
@@ -578,7 +528,7 @@ private fun CoinButton(
 }
 
 @Composable
-fun NormalLevelContent(levelData: LevelData, fontFamily: FontFamily) {
+fun NormalLevelContent(gameCategory: GameCategory, fontFamily: FontFamily) {
     LocalContext.current
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -586,35 +536,37 @@ fun NormalLevelContent(levelData: LevelData, fontFamily: FontFamily) {
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = stringResource(R.string.level_text, levelData.levelNumber),
+            text = stringResource(R.string.level_text, gameCategory.id),
             fontSize = 14.sp,
-            fontFamily = fontFamily,
             color = Color.White,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            textAlign = TextAlign.Center,
+            lineHeight = 15.sp,
+            fontFamily = fontFamily
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        levelData.progress?.let { progress ->
-            val progressParts = progress.split("/")
-            val currentProgress = progressParts.getOrNull(0)?.trim()?.toFloatOrNull() ?: 0f
-            val maxProgress = progressParts.getOrNull(1)?.trim()?.toFloatOrNull() ?: 1f
+        Spacer(
+            modifier = Modifier.height(
+                if (gameCategory.isUnlocked) 12.dp else 8.dp
+            )
+        )
+        if (gameCategory.isUnlocked)
             GameProgressBarSpacial(
-                current = currentProgress.toInt(),
-                total = maxProgress.toInt(),
+                current = gameCategory.completedLevels,
+                total = gameCategory.totalLevels,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
             )
-        }
-
-        levelData.starsRequired?.let { stars ->
+        if (!gameCategory.isUnlocked) {
             StarsRequiredBadge(
-                starsRequired = stars,
+                starsRequired = gameCategory.requiredStars,
                 fontFamily = fontFamily,
                 badgeColor = AppColors.SpecialSecondaryColor,
                 textColor = Color.White
             )
         }
     }
+
 }
 
 @Composable
@@ -727,7 +679,7 @@ fun GameModeTabsEnhanced(
         },
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp)
+            .height(70.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(darkNavyBlue.copy(alpha = 0.7f)),
         containerColor = darkNavyBlue.copy(alpha = 0.7f),
@@ -737,76 +689,37 @@ fun GameModeTabsEnhanced(
 
 @Composable
 fun LevelSelectionList(
-    levels: List<LevelData>,
-    onLevelSelected: (LevelData) -> Unit,
-    fontFamily: FontFamily
+    gameCategorys: List<GameCategory>,
+    onLevelSelected: (GameCategory) -> Unit,
+    fontFamily: FontFamily,
+    isLoading: Boolean = false,
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(1.dp),
-        contentPadding = PaddingValues(bottom = 16.dp)
-    ) {
-        items(levels) { levelData ->
-            LevelItem(
-                levelData = levelData,
-                onClick = { if (levelData.isUnlocked) onLevelSelected(levelData) },
-                fontFamily = fontFamily
-            )
+    if (!isLoading) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(1.dp),
+            contentPadding = PaddingValues(bottom = 16.dp)
+        ) {
+            items(gameCategorys) { levelData ->
+                LevelItem(
+                    gameCategory = levelData,
+                    onClick = { if (levelData.isUnlocked) onLevelSelected(levelData) },
+                    fontFamily = fontFamily
+                )
+            }
         }
-    }
-}
-
-@Composable
-fun LevelItemImage(levelData: LevelData) {
-    LocalContext.current
-    Box(modifier = Modifier.size(80.dp)) {
-        EnhancedImageBox3D(
-            image = levelData.imageResId,
-            size = 80,
-            isRtl = true,
+    } else {
+        CircularProgressIndicator(
+            modifier = Modifier
+                .padding(16.dp),
+            color = AppColors.GreenAccent,
+            strokeWidth = 4.dp
         )
-        if (levelData.newWordsCount > 0 && levelData.isUnlocked) {
-            Box(
-                modifier = Modifier
-                    .size(28.dp)
-                    .clip(CircleShape)
-                    .background(AppColors.AlertRed)
-                    .align(Alignment.TopEnd)
-                    .offset(x = 4.dp, y = (-4).dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = stringResource(R.string.plus_words, levelData.newWordsCount),
-                    color = Color.White,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-
-        if (levelData.hasGift && levelData.isUnlocked) {
-            Box(
-                modifier = Modifier
-                    .size(28.dp)
-                    .clip(CircleShape)
-                    .background(GoldColor)
-                    .align(Alignment.BottomEnd),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.gift_ic),
-                    contentDescription = stringResource(R.string.gift),
-                    modifier = Modifier
-                        .size(18.dp)
-                        .align(Alignment.Center)
-                )
-            }
-        }
     }
 }
 
 @Composable
-fun SpecialLevelContent(levelData: LevelData, fontFamily: FontFamily) {
+fun SpecialLevelContent(gameCategory: GameCategory, fontFamily: FontFamily) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -814,20 +727,23 @@ fun SpecialLevelContent(levelData: LevelData, fontFamily: FontFamily) {
     ) {
 
         Text(
-            text = levelData.specialTitle,
+            text = gameCategory.category.name.replace("_", " ")
+                .replaceFirstChar { it.uppercase() },
             color = SpecialTextColor,
             fontWeight = FontWeight.Bold,
-            fontSize =  14.sp,
+            fontSize = 16.sp,
             textAlign = TextAlign.Center,
             lineHeight = 15.sp,
             fontFamily = fontFamily
         )
-        Spacer(modifier = Modifier.height(
-            if (levelData.isUnlocked) 4.dp else 0.dp
-        ))
+        Spacer(
+            modifier = Modifier.height(
+                if (gameCategory.isUnlocked) 4.dp else 0.dp
+            )
+        )
         GameProgressBarSpacial(
-            current = 7,
-            total = 22,
+            current = gameCategory.completedLevels,
+            total = gameCategory.totalLevels,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp)
@@ -870,6 +786,7 @@ private fun LockIcon(onClick: () -> Unit) {
         )
     }
 }
+
 @Composable
 fun StarsRequiredBadge(
     starsRequired: Int,
@@ -913,15 +830,53 @@ fun StarsRequiredBadge(
         }
     }
 }
+
+// Add to HomeScreen
+private fun shouldShowDailyReward(preferencesManager: GamePreferencesManager): Boolean {
+    val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+    val lastRewardDate = preferencesManager.getLastDailyRewardDate()
+    return lastRewardDate != today
+}
+
+private fun getDailyRewardAmount(preferencesManager: GamePreferencesManager): Int {
+    val streak = preferencesManager.getDailyRewardStreak()
+    return when {
+        streak >= 7 -> 500
+        streak >= 5 -> 300
+        streak >= 3 -> 200
+        streak >= 1 -> 100
+        else -> 50
+    }
+}
+
+private fun claimDailyReward(preferencesManager: GamePreferencesManager) {
+    val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+    val yesterday = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(
+        Date(System.currentTimeMillis() - 24 * 60 * 60 * 1000)
+    )
+    val lastRewardDate = preferencesManager.getLastDailyRewardDate()
+
+    val currentStreak = if (lastRewardDate == yesterday) {
+        preferencesManager.getDailyRewardStreak() + 1
+    } else {
+        1
+    }
+
+    val rewardAmount = getDailyRewardAmount(preferencesManager)
+    val currentStats = preferencesManager.getPlayer()
+    val newStats = currentStats.copy(coins = currentStats.coins + rewardAmount)
+
+    preferencesManager.savePlayer(newStats)
+    preferencesManager.setLastDailyRewardDate(today)
+    preferencesManager.setDailyRewardStreak(currentStreak)
+}
+
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
-        HomeScreen(
-            onStartGame = { _, _ -> },
-            onOpenStore = {},
-            onOpenDailyChallenge = {},
-            onOpenProfile = {},
-            navController = rememberNavController(),
-            adMobManager = AdMobManager(LocalContext.current)
-        )
+    HomeScreen(
+        onStartGame = { _, _ -> },
+        onOpenStore = {},
+        navController = rememberNavController(),
+    )
 }

@@ -3,6 +3,7 @@ package com.pyramid.questions
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -10,19 +11,30 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.compose.rememberNavController
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.pyramid.questions.data.local.GameViewModel
 import com.pyramid.questions.data.remote.AdMobManager
+import com.pyramid.questions.data.remote.getAdMobManager
 import com.pyramid.questions.navigation.AppNavGraph
 import com.pyramid.questions.ui.theme.GuessTheWordsGameTheme
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
+
 
 class MainActivity : ComponentActivity() {
+    private lateinit var adMobManager: AdMobManager
+    private val gameViewModel: GameViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        lateinit var adMobManager: AdMobManager
+        adMobManager = this.getAdMobManager()
+        adMobManager.preloadAllAds(object : AdMobManager.AdLoadListener {
+            override fun onAdLoaded() {
+                println("إعلان تم تحميله بنجاح")
+            }
+            override fun onAdFailedToLoad(error: String) {
+                println("فشل في تحميل الإعلان: $error")
+            }
+        })
         setContent {
-            adMobManager = AdMobManager(this)
             GuessTheWordsGameTheme {
-               // WindowCompat.setDecorFitsSystemWindows(window, false)
                 val systemUiController = rememberSystemUiController()
                 SideEffect {
                     systemUiController.setStatusBarColor(
@@ -44,4 +56,10 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        adMobManager.destroyAds()
+    }
 }
+

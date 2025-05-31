@@ -57,7 +57,7 @@ fun SelectLanguageDialog(
     selectedLanguage: String = "ar",
     availableLanguages: List<Language> = defaultLanguages(),
 ) {
-    val arabicFont = FontFamily(Font(R.font.arbic_font_bold_2))
+    val arabicFont = FontFamily.Default
     val context = LocalContext.current
     val preferencesManager = remember { GamePreferencesManager(context.applicationContext) }
 

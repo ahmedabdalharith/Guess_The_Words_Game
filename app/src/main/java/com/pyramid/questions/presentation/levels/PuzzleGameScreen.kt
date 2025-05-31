@@ -28,76 +28,110 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.rememberAsyncImagePainter
 import com.pyramid.questions.AppColors
 import com.pyramid.questions.R
 import com.pyramid.questions.data.local.GamePreferencesManager
+import com.pyramid.questions.domain.model.Question
+import com.pyramid.questions.domain.model.QuestionCategory
 import com.pyramid.questions.presentation.components.TopGameBar
 import java.util.Locale
+
+
+data class ImageLevel(
+    val imageId: Int,
+    val question: Question,
+    val levelId: String
+)
 
 
 @Composable
 fun PuzzleGameScreen(
     onOpenStore: () -> Unit = {},
     onOpenProfile: () -> Unit = {},
-    onImageClick: (Int) -> Unit = {},
-    navController: NavHostController= rememberNavController()
+    onImageClick: (Question) -> Unit = {},
+    navController: NavHostController = rememberNavController()
 ) {
-    val images = listOf(R.drawable.img1, R.drawable.img2, R.drawable.img3, R.drawable.img4)
+    val imageLevels = listOf<ImageLevel>(
+        ImageLevel(
+            imageId = 1,
+            question = Question(
+                questionText = "What is the capital of Japan?",
+                questionId = "1",
+                imageUrl = "https://res.cloudinary.com/dnsgxkndl/image/upload/v1748606620/img1_ugyoje.jpg",
+                answer = "Japan",
+                lettersPool = listOf('J', 'a', 'p', 'a', 'n', 'm', 'o', 'n'),
+                hint = listOf('J', 'a'),
+                level = "l1",
+                category = QuestionCategory.GENERAL
+            ).initializeAvailableLetters(),
+            levelId = "1"
+        ),
+    )
     val preferencesManager = remember { GamePreferencesManager(navController.context) }
     val currentLocale = remember { Locale(preferencesManager.getLanguage()) }
-    FontFamily(Font(if (currentLocale == Locale("ar")) {
-        R.font.arbic_font_bold_2
-    } else {
-        R.font.en_font
-    }))
-    val playerStats =preferencesManager.getPlayerStats()
+    FontFamily(
+        Font(
+            if (currentLocale == Locale("ar")) {
+                R.font.arbic_font_bold_2
+            } else {
+                R.font.eng3
+            }
+        )
+    )
+    val player = preferencesManager.getPlayer()
     CompositionLocalProvider(
         LocalContext provides LocalContext.current.createConfigurationContext(
             Configuration().apply { setLocale(currentLocale) }
         )
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            AppColors.BackgroundStart,
-                            AppColors.BackgroundEnd
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                AppColors.BackgroundStart,
+                                AppColors.BackgroundEnd
+                            )
                         )
                     )
-                )
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Top bar with player stats
-                TopGameBar(
-                    playerStats = playerStats,
-                    onOpenStore = onOpenStore,
-                    onOpenProfile = onOpenProfile,
-                    onBackClicked = {
-                        navController.popBackStack()
-                    },
-                    fontFamily = FontFamily(Font(R.font.arbic_font_bold_2)),
-                )
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Top bar with player stats
+                    TopGameBar(
+                        player = player,
+                        onOpenStore = onOpenStore,
+                        onOpenProfile = onOpenProfile,
+                        onBackClicked = {
+                            navController.popBackStack()
+                        },
+                        fontFamily = FontFamily.Default,
+                    )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                // Puzzle images grid
-                PuzzleImagesGrid(
-                    images = images,
-                    onImageClick = onImageClick
-                )
+                    // Puzzle images grid
+                    PuzzleImagesGrid(
+                        imageLevel = imageLevels,
+                        onImageClick = onImageClick
+                    )
+                }
             }
         }
     }
@@ -105,8 +139,8 @@ fun PuzzleGameScreen(
 
 @Composable
 fun PuzzleImagesGrid(
-    images: List<Int>,
-    onImageClick: (Int) -> Unit = {}
+    imageLevel: List<ImageLevel>,
+    onImageClick: (Question) -> Unit = {}
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(3),
@@ -114,12 +148,11 @@ fun PuzzleImagesGrid(
             .fillMaxWidth()
             .padding(8.dp)
     ) {
-        items(images.size) { index ->
+        items(imageLevel.size) { index ->
             PuzzleImageItem(
-                imageId = images[index],
+                imageId = imageLevel[index],
                 onClick = {
-                    onImageClick(images[index])
-
+                    onImageClick(imageLevel[index].question)
                 }
             )
         }
@@ -128,7 +161,7 @@ fun PuzzleImagesGrid(
 
 @Composable
 fun PuzzleImageItem(
-    imageId: Int,
+    imageId: ImageLevel,
     onClick: () -> Unit = {}
 ) {
     Card(
@@ -150,7 +183,11 @@ fun PuzzleImageItem(
                 .background(Color.DarkGray)
         ) {
             Image(
-                painter = painterResource(id = imageId),
+                rememberAsyncImagePainter(
+                    model = imageId.question.imageUrl.ifEmpty {
+                        R.drawable.refresh_ic // Fallback image
+                    }
+                ),
                 contentDescription = "Puzzle image",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -158,6 +195,7 @@ fun PuzzleImageItem(
         }
     }
 }
+
 @Composable
 fun Divider3D(
     modifier: Modifier = Modifier,

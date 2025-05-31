@@ -21,15 +21,16 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,60 +53,42 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import com.pyramid.questions.R
+import com.pyramid.questions.data.local.DailyReward
+import com.pyramid.questions.data.local.DailyRewardType
 import com.pyramid.questions.data.local.GamePreferencesManager
+import com.pyramid.questions.data.local.GameRepository
+import com.pyramid.questions.data.local.GameRoomDatabase
+import com.pyramid.questions.data.local.HomeViewModel
 import java.util.Locale
 
-data class DailyReward(
-    val day: Int,
-    val amount: Int,
-    val isCollected: Boolean = false,
-    val isHighlighted: Boolean = false,
-    val rewardType: RewardType = RewardType.COINS
-)
-
-enum class RewardType {
-    COINS,
-    COINS_STACK,
-    COINS_BAG,
-    CASH
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DailyRewardDialog(
-    currentDay: Int = 2,
+    currentDay: Int,
     onClose: () -> Unit = {},
     onCollectReward: (DailyReward) -> Unit = {}
 ) {
-    var rewards by remember {
-        mutableStateOf(
-            listOf(
-                DailyReward(1, 50, isCollected = true),
-                DailyReward(2, 100, isHighlighted = true),
-                DailyReward(3, 120),
-                DailyReward(4, 150),
-                DailyReward(5, 180, rewardType = RewardType.COINS_STACK),
-                DailyReward(6, 220, rewardType = RewardType.COINS_STACK),
-                DailyReward(7, 260, rewardType = RewardType.COINS_STACK),
-                DailyReward(8, 300, rewardType = RewardType.CASH),
-                DailyReward(9, 350, rewardType = RewardType.COINS_BAG),
-                DailyReward(10, 500, rewardType = RewardType.COINS_BAG)
-            )
-        )
-    }
 
     val context = LocalContext.current
     val preferencesManager = remember { GamePreferencesManager(context) }
     val currentLocale = remember { Locale(preferencesManager.getLanguage()) }
+    val database = remember { GameRoomDatabase.getDatabase(context) }
+    val repository = remember { GameRepository(database) }
+    val viewModel: HomeViewModel = remember {
+        HomeViewModel(repository, preferencesManager)
+    }
+    viewModel.loadDailyRewards()
     val arabicFont = FontFamily(
         Font(
             if (currentLocale == Locale("ar")) {
                 R.font.arbic_font_bold_2
             } else {
-                R.font.en_font
+                R.font.eng3
             }
         )
     )
+    val dailyRewards = viewModel.dailyRewards.collectAsState().value
 
     BasicAlertDialog(
         onDismissRequest = onClose,
@@ -130,7 +113,6 @@ fun DailyRewardDialog(
                     .aspectRatio(0.7f)
                     .background(Color.Transparent)
             ) {
-                // Main dialog container
                 Box(
                     modifier = Modifier
                         .padding(24.dp)
@@ -157,7 +139,6 @@ fun DailyRewardDialog(
                             .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Grid of rewards
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(4),
                             modifier = Modifier
@@ -166,16 +147,13 @@ fun DailyRewardDialog(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            items(rewards) { reward ->
+                            items(dailyRewards) { reward ->
                                 RewardItem(
                                     reward = reward,
                                     currentDay = currentDay,
                                     arabicFont = arabicFont,
                                     onClick = {
-                                        if (reward.day == currentDay && !reward.isCollected) {
-                                            rewards = rewards.map {
-                                                if (it.day == currentDay) it.copy(isCollected = true) else it
-                                            }
+                                        if (reward.isActive && !reward.isCollected) {
                                             onCollectReward(reward)
                                         }
                                     }
@@ -183,7 +161,6 @@ fun DailyRewardDialog(
                             }
                         }
 
-                        // Instruction text
                         Text(
                             text = stringResource(R.string.daily_reward_collect_instruction),
                             fontSize = 12.sp,
@@ -203,7 +180,6 @@ fun DailyRewardDialog(
                     }
                 }
 
-                // Gift image at the top
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -231,9 +207,8 @@ fun RewardItem(
     arabicFont: FontFamily,
     onClick: () -> Unit
 ) {
-    val isCurrentDay = reward.day == currentDay
-    val isClickable = !reward.isCollected && (reward.day <= currentDay)
-
+    val isCurrentDay = reward.currentDay == currentDay
+    val isClickable = !reward.isCollected && (isCurrentDay)
     Box(
         modifier = Modifier
             .aspectRatio(0.8f)
@@ -243,7 +218,6 @@ fun RewardItem(
             ),
         contentAlignment = Alignment.Center
     ) {
-        // Background day image
         Image(
             painter = painterResource(
                 if (reward.isCollected) R.drawable.day_done
@@ -252,24 +226,23 @@ fun RewardItem(
             contentDescription = null,
             modifier = Modifier
                 .fillMaxSize()
+                .align(Alignment.Center)
                 .clip(RoundedCornerShape(16.dp)),
             contentScale = ContentScale.Crop
         )
 
-
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
+        Box(
+            contentAlignment = Alignment.Center,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(8.dp)
+                .padding(top =2.dp , bottom = 8.dp, start = 8.dp, end = 8.dp)
         ) {
             Text(
-                text = stringResource(R.string.daily_reward_day, reward.day),
+                text = stringResource(R.string.daily_reward_day, reward.isActive),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = if (reward.isCollected) Color.White.copy(alpha = 0.9f)
-                else Color(0xFF555555),
+                else Color(0xFFFFFFFF),
                 fontFamily = arabicFont,
                 style = TextStyle(
                     shadow = if (reward.isCollected) Shadow(
@@ -278,75 +251,43 @@ fun RewardItem(
                         blurRadius = 2f
                     ) else null
                 ),
-                modifier = Modifier.padding(bottom = 6.dp)
-            )
-            val rewardImage = when (reward.rewardType) {
-                RewardType.COINS -> R.drawable.coin1
-                RewardType.COINS_STACK -> R.drawable.coin2
-                RewardType.COINS_BAG -> R.drawable.coin3
-                RewardType.CASH -> R.drawable.coin4
-            }
-            Image(
-                painter = painterResource(rewardImage),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(32.dp)
-                    .padding(2.dp),
-                contentScale = ContentScale.Fit
-            )
-            Text(
-                text = stringResource(R.string.reward_amount, reward.amount),
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (reward.isCollected) Color.White.copy(alpha = 0.9f)
-                else Color(0xFFFFD700),
-                fontFamily = arabicFont,
-                style = TextStyle(
-                    shadow = Shadow(
-                        color = Color.Black.copy(alpha = 0.4f),
-                        offset = Offset(1f, 1f),
-                        blurRadius = 2f
-                    )
-                ),
-                modifier = Modifier.padding(top = 4.dp)
-            )
-
-            // Current day indicator or spacer
-            if (isCurrentDay && !reward.isCollected) {
-                Text(
-                    text = stringResource(R.string.daily_reward_today),
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF4CAF50),
-                    fontFamily = arabicFont,
-                    style = TextStyle(
-                        shadow = Shadow(
-                            color = Color.White.copy(alpha = 0.5f),
-                            offset = Offset(1f, 1f),
-                            blurRadius = 2f
-                        )
-                    ),
-                    modifier = Modifier.padding(top = 4.dp)
+                modifier = Modifier.padding(bottom = 6.dp).align(
+                    Alignment.TopCenter,
                 )
-            } else {
-                Spacer(modifier = Modifier.height(16.dp))
+            )
+            if (!reward.isCollected){
+                Image(
+                    painter = painterResource(reward.rewardIcon),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(56.dp)
+                        .align(Alignment.Center)
+                        .padding(2.dp),
+                    contentScale = ContentScale.Fit
+                )
             }
         }
-        if (isCurrentDay && !reward.isCollected) {
-            Image(
-                painter = painterResource(R.drawable.check_ic),
+        if (reward.isCollected) {
+            Icon(
+                Icons.Default.CheckCircle,
                 contentDescription = "Collected",
                 modifier = Modifier
-                    .size(18.dp)
-                    .scale(1.2f),
-                contentScale = ContentScale.Fit
+                    .size(28.dp)
+                    .scale(1.2f)
+                    .align(Alignment.Center),
+                tint = Color(0xFF4CAF50) // Green color for collected items
+
             )
         }
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun DailyRewardDialogPreview() {
-    DailyRewardDialog()
+    DailyRewardDialog(
+        currentDay = 5,
+        onClose = {},
+        onCollectReward = {}
+    )
 }

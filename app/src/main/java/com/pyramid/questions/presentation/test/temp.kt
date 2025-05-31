@@ -29,6 +29,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.core.graphics.ColorUtils
+import androidx.core.graphics.ColorUtils.colorToHSL
 import com.pyramid.questions.R
 
 
@@ -651,12 +653,12 @@ fun EnhancedImageBox3D(
 
 private fun Color.copy(brightness: Float): Color {
     val hsl = FloatArray(3)
-    androidx.core.graphics.ColorUtils.colorToHSL(
+    colorToHSL(
         this.toArgb(),
         hsl
     )
     hsl[2] = hsl[2] * brightness
-    return Color(androidx.core.graphics.ColorUtils.HSLToColor(hsl))
+    return Color(ColorUtils.HSLToColor(hsl))
 }
 
 @Preview

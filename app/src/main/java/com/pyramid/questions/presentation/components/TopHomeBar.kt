@@ -28,13 +28,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.pyramid.questions.AppColors
 import com.pyramid.questions.R
-import com.pyramid.questions.domain.model.PlayerStats
+import com.pyramid.questions.domain.model.Player
 import com.pyramid.questions.navigation.Route
 
 @Composable
 fun TopHomeBar(
     navController: NavHostController,
-    playerStats: PlayerStats,
+    player: Player,
     onOpenStore: () -> Unit = {},
     fontFamily: FontFamily,
     onOpenSettings: () -> Unit = {},
@@ -57,7 +57,7 @@ fun TopHomeBar(
         ) {
             TopBarComponents(
                 icon = R.drawable.coin1,
-                value = playerStats.coins,
+                value = player.coins,
                 gradientColors = listOf(AppColors.CoinsGradientStart, AppColors.CoinsGradientEnd),
                 borderColor = Color(0xFF4C7CE4),
                 fontFamily = fontFamily,
@@ -66,7 +66,7 @@ fun TopHomeBar(
             )
             TopBarComponents(
                 icon = R.drawable.star,
-                value = playerStats.stars,
+                value = player.stars,
                 gradientColors = listOf(AppColors.StarsGradientStart, AppColors.StarsGradientEnd),
                 borderColor = Color(0xFFE4AF4C),
                 fontFamily = fontFamily,

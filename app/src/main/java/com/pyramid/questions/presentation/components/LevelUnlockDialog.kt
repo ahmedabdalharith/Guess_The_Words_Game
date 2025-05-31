@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -44,13 +45,12 @@ import com.pyramid.questions.presentation.test.Button3D
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LevelUnlockDialog(
-    title: String = "فتح مستوى",
-    subtitle: String = "لفتح هذا المستوى",
     starsRequired: Int = 10,
     coinsCost: Int = 1000,
     onUnlock: () -> Unit = {},
     onClose: () -> Unit = {},
 ) {
+
     BasicAlertDialog(
         onDismissRequest = onClose,
         properties = DialogProperties(
@@ -96,7 +96,7 @@ fun LevelUnlockDialog(
                 ) {
                     // Title with shadow effect
                     Text(
-                        text = title,
+                        text = stringResource(R.string.level_unlock_title),
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
@@ -113,7 +113,7 @@ fun LevelUnlockDialog(
                     )
                     Image(
                         painterResource(R.drawable.lock_open),
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.content_description_unlock_icon),
                         modifier = Modifier
                             .size(100.dp)
                             .padding(bottom = 16.dp),
@@ -127,7 +127,7 @@ fun LevelUnlockDialog(
                         // Star icon
                         Image(
                             painter = painterResource(id = R.drawable.star),
-                            contentDescription = "Stars",
+                            contentDescription = stringResource(R.string.content_description_stars),
                             modifier = Modifier.size(40.dp),
                             contentScale = ContentScale.Crop
                         )
@@ -152,7 +152,7 @@ fun LevelUnlockDialog(
 
                     // Subtitle
                     Text(
-                        text = subtitle,
+                        text = stringResource(R.string.level_unlock_subtitle),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
@@ -176,7 +176,7 @@ fun LevelUnlockDialog(
                         height = 70.dp,
                         cornerRadius = 16,
                         onClick = onUnlock,
-                        text = "افتح الآن\n $coinsCost🪙",
+                        text = stringResource(R.string.unlock_button, coinsCost),
                         textSize = 14,
                     )
                 }
@@ -194,12 +194,11 @@ fun LevelUnlockDialog(
         }
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun LevelUnlockDialogPreview() {
     LevelUnlockDialog(
-        title = "فتح مستوى",
-        subtitle = "لفتح هذا المستوى",
         starsRequired = 10,
         coinsCost = 100,
         onUnlock = { /* Handle unlock */ },

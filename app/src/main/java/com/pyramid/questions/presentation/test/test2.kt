@@ -753,7 +753,7 @@ fun AnimatedText3D(
 @Preview
 @Composable
 fun Text3DExample() {
-    val arabicFont = FontFamily(Font(R.font.arbic_font_bold_2))
+    val arabicFont = FontFamily.Default
 
     Column(
         modifier = Modifier
@@ -877,7 +877,7 @@ fun Button3D(
                         text =  text  ,
                         color = textColor,
                         fontSize = textSize.sp,
-                        fontFamily = FontFamily(Font(R.font.arbic_font_bold_2)),
+                        fontFamily = FontFamily.Default,
                         textAlign = TextAlign.Center,
                     )
                 }

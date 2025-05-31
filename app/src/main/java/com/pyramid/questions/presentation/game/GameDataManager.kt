@@ -1,12 +1,8 @@
 package com.pyramid.questions.presentation.game
 
 import com.pyramid.questions.R
-data class LetterData(
-    val id: Int,
-    val letter: Char,
-    val isSelected: Boolean = false,
-    val isDeleted: Boolean = false
-)
+import com.pyramid.questions.domain.model.LetterData
+
 
 class GameDataManager {
 

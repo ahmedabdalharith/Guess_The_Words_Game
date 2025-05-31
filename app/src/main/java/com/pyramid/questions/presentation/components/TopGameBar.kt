@@ -16,13 +16,13 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.pyramid.questions.AppColors
 import com.pyramid.questions.R
-import com.pyramid.questions.domain.model.PlayerStats
+import com.pyramid.questions.domain.model.Player
 import com.pyramid.questions.presentation.levels.Divider3D
 
 
 @Composable
 fun TopGameBar(
-    playerStats: PlayerStats,
+    player: Player,
     onOpenStore: () -> Unit = {},
     onOpenProfile: () -> Unit = {},
     onBackClicked: () -> Unit = {},
@@ -47,7 +47,7 @@ fun TopGameBar(
         ) {
             TopBarComponents(
                 icon = R.drawable.coin1,
-                value = playerStats.coins,
+                value = player.coins,
                 gradientColors = listOf(AppColors.CoinsGradientStart, AppColors.CoinsGradientEnd),
                 borderColor = Color(0xFF4C7CE4),
                 fontFamily = fontFamily,
@@ -56,7 +56,7 @@ fun TopGameBar(
             )
             TopBarComponents(
                 icon = R.drawable.star,
-                value = playerStats.stars,
+                value = player.stars,
                 gradientColors = listOf(AppColors.StarsGradientStart, AppColors.StarsGradientEnd),
                 borderColor = Color(0xFFE4AF4C),
                 fontFamily = fontFamily,

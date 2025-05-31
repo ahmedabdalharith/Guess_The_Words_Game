@@ -1,13 +1,18 @@
 package com.pyramid.questions.navigation
 
+import android.net.Uri
 import com.pyramid.questions.presentation.wheel.SpinWheelScreen
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.google.gson.Gson
 import com.pyramid.questions.R
 import com.pyramid.questions.core.Constants
+import com.pyramid.questions.domain.model.Question
 import com.pyramid.questions.presentation.game.WordGuessingGameScreen
 import com.pyramid.questions.presentation.home.HomeScreen
 import com.pyramid.questions.presentation.leaderboard.LeaderboardScreen
@@ -48,12 +53,7 @@ fun AppNavGraph(
                 onOpenStore = {
                   navController.navigate(Route.STORE)
                 },
-                onOpenDailyChallenge = {
-                    navController.navigate(Route.DAILY_CHALLENGE)
-                },
-                onOpenProfile = {
-                    navController.navigate(Route.PROFILE)
-                }
+
             )
         }
 
@@ -73,18 +73,26 @@ fun AppNavGraph(
                 onOpenProfile = {
                     navController.navigate(Route.PROFILE)
                 },
-                onImageClick = { imageId ->
-                    navController.navigate(Route.WordGuessing.createRoute(imageId))
+                onImageClick = { question ->
+                    val questionJson = Uri.encode(Gson().toJson(question))
+                    navController.navigate(Route.WordGuessing.createRoute(questionJson))
                 }
             )
         }
 
-        composable(Route.WordGuessing.ROUTE) { backStackEntry ->
-            val imageId = backStackEntry.arguments?.getString("imageId")?.toIntOrNull() ?: R.drawable.japanese_background
-
+        composable(Route.WordGuessing.ROUTE,
+            arguments = listOf(
+                navArgument("question") { type = NavType.StringType }
+            )) { backStackEntry ->
+            val questionJson = backStackEntry.arguments?.getString("question")
+            val question = Gson().fromJson(
+                Uri.decode(questionJson),
+                Question::class.java
+            )
             WordGuessingGameScreen(
                 navController = navController,
-                imageId = imageId)
+                question =question
+            )
         }
         composable(Route.WHEEL) {
             SpinWheelScreen(
@@ -123,10 +131,10 @@ object Route {
     }
 
     object WordGuessing {
-        const val ROUTE = "word-guessing/{imageId}"
+        const val ROUTE = "word-guessing/{question}"
 
-        fun createRoute(imageId: Int): String {
-            return "word-guessing/$imageId"
+        fun createRoute(question: String): String {
+            return "word-guessing/$question"
         }
     }
 }

@@ -3,7 +3,7 @@ package com.pyramid.questions.data.local
 import android.content.Context
 import android.content.SharedPreferences
 import com.pyramid.questions.core.Constants.WordCategory
-import com.pyramid.questions.domain.model.PlayerStats
+import com.pyramid.questions.domain.model.Player
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import androidx.core.content.edit
@@ -55,6 +55,27 @@ class GamePreferencesManager(private val context: Context) {
         private const val KEY_LAST_AD_WATCH = "last_ad_watch"
         private const val KEY_AD_FREE_UNTIL = "ad_free_until"
         private const val KEY_REWARDED_AD_COUNT = "rewarded_ad_count"
+
+        // username id
+        private const val KEY_PLAYER_USERNAME_ID = "player_username_id"
+
+
+    }
+    // Add to GamePreferencesManager class
+    fun getLastDailyRewardDate(): String {
+        return sharedPreferences.getString("last_daily_reward_date", "") ?: ""
+    }
+
+    fun setLastDailyRewardDate(date: String) {
+        sharedPreferences.edit { putString("last_daily_reward_date", date) }
+    }
+
+    fun getDailyRewardStreak(): Int {
+        return sharedPreferences.getInt("daily_reward_streak", 0)
+    }
+
+    fun setDailyRewardStreak(streak: Int) {
+        sharedPreferences.edit { putInt("daily_reward_streak", streak) }
     }
 
     private val sharedPreferences: SharedPreferences =
@@ -62,22 +83,22 @@ class GamePreferencesManager(private val context: Context) {
     private val gson = Gson()
 
     // Player Stats Management
-    fun savePlayerStats(playerStats: PlayerStats) {
+    fun savePlayer(player: Player) {
         sharedPreferences.edit {
-            putInt(KEY_PLAYER_STARS, playerStats.stars)
-            putInt(KEY_PLAYER_COINS, playerStats.coins)
-            putInt(KEY_PLAYER_LEVEL, playerStats.level)
-            putInt(KEY_PLAYER_XP, playerStats.xp)
-            putInt(KEY_PLAYER_TOTAL_XP, playerStats.totalXp)
-            putInt(KEY_PLAYER_STREAK, playerStats.streak)
+            putInt(KEY_PLAYER_STARS, player.stars)
+            putInt(KEY_PLAYER_COINS, player.coins)
+            putInt(KEY_PLAYER_LEVEL, player.currentLevel)
+            putInt(KEY_PLAYER_XP, player.xp)
+            putInt(KEY_PLAYER_TOTAL_XP, player.totalXp)
+            putInt(KEY_PLAYER_STREAK, player.streak)
         }
     }
 
-    fun getPlayerStats(): PlayerStats {
-        return PlayerStats(
+    fun getPlayer(): Player {
+        return Player(
             stars = sharedPreferences.getInt(KEY_PLAYER_STARS, 0),
             coins = sharedPreferences.getInt(KEY_PLAYER_COINS, 100),
-            level = sharedPreferences.getInt(KEY_PLAYER_LEVEL, 1),
+            currentLevel = sharedPreferences.getInt(KEY_PLAYER_LEVEL, 1),
             xp = sharedPreferences.getInt(KEY_PLAYER_XP, 0),
             totalXp = sharedPreferences.getInt(KEY_PLAYER_TOTAL_XP, 100),
             streak = sharedPreferences.getInt(KEY_PLAYER_STREAK, 0)
@@ -119,6 +140,15 @@ class GamePreferencesManager(private val context: Context) {
 
     fun getUsername(): String? {
         return sharedPreferences.getString(KEY_PLAYER_USERNAME, null)
+    }
+    fun setUsernameId(username: String) {
+        sharedPreferences.edit {
+            putString(KEY_PLAYER_USERNAME_ID, username)
+        }
+    }
+
+    fun getUsernameId(): String? {
+        return sharedPreferences.getString(KEY_PLAYER_USERNAME_ID, null)
     }
 
     // Level Progress Management
@@ -259,9 +289,9 @@ class GamePreferencesManager(private val context: Context) {
     }
 
     fun setLastDailyReward(timestamp: Long) {
-        sharedPreferences.edit()
-            .putLong(KEY_LAST_DAILY_REWARD, timestamp)
-            .apply()
+        sharedPreferences.edit {
+            putLong(KEY_LAST_DAILY_REWARD, timestamp)
+        }
     }
 
     fun getLastDailyReward(): Long {
@@ -403,15 +433,109 @@ class GamePreferencesManager(private val context: Context) {
             false
         }
     }
+
+
+    fun setLastSpinTime(time: Long) {
+        sharedPreferences.edit().putLong("last_spin_time", time).apply()
+    }
+
+    fun getLastSpinTime(): Long {
+        return sharedPreferences.getLong("last_spin_time", 0L)
+    }
+
+    fun isSpinAllowed(): Boolean {
+        val currentTime = System.currentTimeMillis()
+        val lastSpinTime = getLastSpinTime()
+        return currentTime - lastSpinTime >= 8 * 60 * 60 * 1000L
+    }
+
+    fun getTimeUntilNextSpin(): Long {
+        val currentTime = System.currentTimeMillis()
+        val lastSpinTime = getLastSpinTime()
+        val waitTime = 8 * 60 * 60 * 1000L
+        return waitTime - (currentTime - lastSpinTime)
+    }
+    fun saveLives(lives: Int) {
+        val editor = sharedPreferences.edit()
+        editor.putInt("current_lives", lives)
+        editor.apply()
+    }
+
+    fun getLives(): Int {
+        return sharedPreferences.getInt("current_lives", 5)
+    }
+
+    fun saveIsRecharging(isRecharging: Boolean) {
+        val editor = sharedPreferences.edit()
+        editor.putBoolean("is_recharging", isRecharging)
+        editor.apply()
+    }
+
+    fun getIsRecharging(): Boolean {
+        return sharedPreferences.getBoolean("is_recharging", false)
+    }
+
+    fun saveRechargeStartTime(timeMillis: Long) {
+        val editor = sharedPreferences.edit()
+        editor.putLong("recharge_start_time", timeMillis)
+        editor.apply()
+    }
+
+    fun getRechargeStartTime(): Long {
+        return sharedPreferences.getLong("recharge_start_time", 0L)
+    }
+
+    fun saveTimeRemaining(timeSeconds: Int) {
+        val editor = sharedPreferences.edit()
+        editor.putInt("time_remaining", timeSeconds)
+        editor.apply()
+    }
+
+    fun getTimeRemaining(): Int {
+        return sharedPreferences.getInt("time_remaining", 1800)
+    }
+    fun resetLastSpinTime() {
+        val sharedPrefs = context.getSharedPreferences("game_prefs", Context.MODE_PRIVATE)
+        sharedPrefs.edit()
+            .putLong("last_spin_time", 0L)
+            .apply()
+    }
+
+    fun setLastDailyRewardClaim(lng: Long) {
+        sharedPreferences.edit {
+            putLong("last_daily_reward_claim", lng)
+        }
+    }
+
+    fun setFirstLaunchCompleted() = sharedPreferences.edit()
+        .putBoolean(KEY_FIRST_LAUNCH, false)
+        .apply()
+
 }
+
+/**
+ * تنسيق الوقت المتبقي لعرضه للمستخدم
+ */
+fun formatTimeRemaining(timeRemaining: Long): String {
+    val hours = timeRemaining / (1000 * 60 * 60)
+    val minutes = (timeRemaining % (1000 * 60 * 60)) / (1000 * 60)
+    val seconds = (timeRemaining % (1000 * 60)) / 1000
+
+    return when {
+        hours > 0 -> String.format("%02d:%02d:%02d", hours, minutes, seconds)
+        minutes > 0 -> String.format("%02d:%02d", minutes, seconds)
+        else -> String.format("00:%02d", seconds)
+    }
+}
+
 
 // Extension functions for easier usage
 fun GamePreferencesManager.hasEnoughCoins(amount: Int): Boolean {
-    return getPlayerStats().coins >= amount
+    return getPlayer().coins >= amount
 }
 
 fun GamePreferencesManager.hasEnoughStars(amount: Int): Boolean {
-    return getPlayerStats().stars >= amount
+    return getPlayer().stars >= amount
 }
 
 fun GamePreferencesManager.canWatchRewardedAd(): Boolean {

@@ -72,7 +72,7 @@ fun StatisticsDialog(
     FontFamily(Font(if (currentLocale == Locale("ar")) {
         R.font.arbic_font_bold_2
     } else {
-        R.font.en_font
+        R.font.eng3
     }))
     if (showDialog) {
         BasicAlertDialog(

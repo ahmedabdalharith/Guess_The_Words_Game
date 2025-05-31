@@ -1,6 +1,8 @@
 package com.pyramid.questions.presentation.components
 
+import android.app.Activity
 import android.content.res.Configuration
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -47,9 +49,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
+import androidx.navigation.NavController
 import com.pyramid.questions.R
 import com.pyramid.questions.data.local.GamePreferencesManager
 import com.pyramid.questions.data.remote.AdMobManager
+import com.pyramid.questions.data.remote.rememberAdMobManager
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,7 +61,7 @@ import java.util.Locale
 fun WhichAdvDialog(
     onClose: () -> Unit = {},
     onRewardEarned: (Int) -> Unit = {},
-    adMobManager: AdMobManager
+    navController: NavController
 ) {
     val context  = LocalContext.current
     val preferencesManager = remember { GamePreferencesManager(context) }
@@ -65,8 +69,9 @@ fun WhichAdvDialog(
     val arabicFont = FontFamily(Font(if (currentLocale == Locale("ar")) {
         R.font.arbic_font_bold_2
     } else {
-        R.font.en_font
+        R.font.eng3
     }))
+    val adMobManager = rememberAdMobManager()
     BasicAlertDialog(
         onDismissRequest = onClose,
         properties = DialogProperties(
@@ -166,13 +171,22 @@ fun WhichAdvDialog(
 
                         YellowButton(
                             onClick = {
-                                // Show rewarded ad when watch button is clicked
-                                if (context is android.app.Activity) {
-                                    adMobManager.showRewardedAd(context) { coins ->
-                                        onRewardEarned(coins)
-                                        onClose()
+                                adMobManager.showVideoAd(
+                                    activity = navController.context as Activity,
+                                    preferInterstitial = false,
+                                    rewardListener = object : AdMobManager.RewardedAdListener {
+                                        override fun onUserEarnedReward(amount: Int, type: String) {
+                                            Log.d(
+                                                "AdMob",
+                                                "User earned reward: $amount $type"
+                                            )
+                                        }
+
+                                        override fun onAdClosed() {
+                                            Log.d("AdMob", "Ad closed")
+                                        }
                                     }
-                                }
+                                )
                             },
                             text = stringResource(R.string.watch_button_text),
                             modifier = Modifier
