@@ -138,6 +138,14 @@ The project is actively maintained and regularly updated with new features and i
 
 ---
 
+## 📊 GitHub Stats
+
+![Ahmed01088's GitHub stats](https://github-readme-stats.vercel.app/api?username=Ahmed01088&show_icons=true&theme=radical)
+![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username=Ahmed01088&layout=compact&theme=radical)
+
+---
+
+Thank you for visiting! ⭐️
 <div align="center">
   <sub>Built with ❤️ by [Ahmed Ibrahim ]</sub>
 </div>
