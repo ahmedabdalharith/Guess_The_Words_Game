@@ -8,8 +8,6 @@
   [![Platform](https://img.shields.io/badge/Platform-Android-green.svg)](https://developer.android.com/)
   [![Kotlin](https://img.shields.io/badge/Kotlin-1.8.0-blue.svg)](https://kotlinlang.org/)
   [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-  [![Downloads](https://img.shields.io/github/downloads/Ahmed01088/Guess_The_Words_Game/total)](https://github.com/Ahmed01088/Guess_The_Words_Game/releases)
-  [![Contributors](https://img.shields.io/github/contributors/Ahmed01088/Guess_The_Words_Game)](https://github.com/Ahmed01088/Guess_The_Words_Game/graphs/contributors)
 </div>
 
 ---
@@ -22,7 +20,7 @@
 
 ## 🌐 Why Guess The Words Game is World-Class
 
-- **Multi-language Support:** Play in English, Arabic, French, Spanish, and more!
+- **Multi-language Support:** Play in English,and Arabic!
 - **International Leaderboards:** Compete with players globally—see your ranking in real time.
 - **Cloud Sync:** Never lose progress; your data is always safe across devices.
 - **Community Events:** Take part in tournaments, seasonal events, and special challenges.
