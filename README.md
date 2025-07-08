@@ -35,7 +35,7 @@
 ## 📱 Screenshots
 
 <div align="center">
-  <img src="screenshots/home_screen.png" width="220" alt="Home Screen" title="Home Screen"/>
+  <img src="Screenshot_20250708_111235.png" width="220" alt="Home Screen" title="Home Screen"/>
   <img src="screenshots/gameplay.png" width="220" alt="Gameplay" title="Gameplay"/>
   <img src="screenshots/score_screen.png" width="220" alt="Score Screen" title="Score Screen"/>
   <img src="screenshots/leaderboard.png" width="220" alt="Leaderboard" title="Leaderboard"/>
