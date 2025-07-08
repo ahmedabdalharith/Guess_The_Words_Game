@@ -154,17 +154,6 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 - Email: ahmed.alharith01@gmail.com
 - GitHub: [@Ahmed01088](https://github.com/Ahmed01088)
 - LinkedIn: [Ahmed Ibrahim](https://linkedin.com/in/ahmed-ibrahim-dev)
-
----
-
-## 🙏 Special Thanks
-
-- The Global Android Developer Community
-- Material Design Team
-- Open Source Contributors
-- Language Translators & Testers
-- Everyone who plays and supports the game!
-
 ---
 
 ## 📊 Project Status
