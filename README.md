@@ -36,7 +36,7 @@
 
 <div align="center">
   <img src="Screenshot_20250708_111235.png" width="220" alt="Home Screen" title="Home Screen"/>
-  <img src="screenshots/gameplay.png" width="220" alt="Gameplay" title="Gameplay"/>
+  <img src="Screenshot_20250708_111538.png" width="220" alt="Gameplay" title="Gameplay"/>
   <img src="Screenshot_20250708_111722.png" width="220" alt="Score Screen" title="Score Screen"/>
   <img src="Screenshot_20250708_111737.png" width="220" alt="Leaderboard" title="Leaderboard"/>
   <img src="Screenshot_20250708_111817.png" width="220" alt="Multi-language" title="Multi-language"/>
