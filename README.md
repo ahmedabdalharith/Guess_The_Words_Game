@@ -11,8 +11,7 @@
 ## 📱 Screenshots
 
 <div align="center">
-  <img src="screenshots/[home_screen.png](https://private-user-images.githubusercontent.com/92690569/463597730-435dd700-3563-4bcd-aae7-c2923c33ea46.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTE5NjU0NTQsIm5iZiI6MTc1MTk2NTE1NCwicGF0aCI6Ii85MjY5MDU2OS80NjM1OTc3MzAtNDM1ZGQ3MDAtMzU2My00YmNkLWFhZTctYzI5MjNjMzNlYTQ2LnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA3MDglMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwNzA4VDA4NTkxNFomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTc3M2VjNWQyNWY4ZmFjNmE2ZDdhYjk1NWI3NTIxZDIyOGU4OGEwOTY4ZGFmY2FmNzAyY2ExYTQ1Yjg0YWI3NzkmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.eGRtAB171FRTI-7KjDD5GkptS6Ha3ePHK8ZmjMnMybw)
-    " width="200" alt="Home Screen"/>
+  <img src="screenshots/home_screen.png" width="200" alt="Home Screen"/>
   <img src="screenshots/gameplay.png" width="200" alt="Gameplay"/>
   <img src="screenshots/score_screen.png" width="200" alt="Score Screen"/>
 </div>
