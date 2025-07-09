@@ -174,5 +174,5 @@ The project is **actively maintained** with new global features, languages, and 
 Thank you for visiting! ⭐️
 
 <div align="center">
-  <sub>Built with ❤️ by <b>Ahmed Ibrahim</b> and a global community</sub>
+  <sub>Built with ❤️ by <b>Ahmed Ibrahim</b></sub>
 </div>
